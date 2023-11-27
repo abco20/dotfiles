@@ -42,6 +42,7 @@ alias ls='lsd'
 alias l='ls'
 alias ll='ls -l'
 alias rm='rm -i'
+alias cat='bat'
 source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
 
 autoload history-search-end
