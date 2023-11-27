@@ -38,7 +38,7 @@ zstyle ':completion:*' completer _complete _approximate _prefix
 
 setopt print_eight_bit
 
-alias ls='ls --color=auto'
+alias ls='lsd'
 alias l='ls'
 alias ll='ls -l'
 alias rm='rm -i'
