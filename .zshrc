@@ -1,3 +1,5 @@
+zstyle ":completion:*:commands" rehash 1
+
 # Lines configured by zsh-newuser-install
 HISTFILE=~/.histfile
 HISTSIZE=1000
