@@ -1,6 +1,8 @@
 local wezterm = require 'wezterm'
-require 'format'
 local launch_menu = require 'launch'
+local mouce = require 'mouse'
+
+require 'format'
 
 return {
     window_decorations = "INTEGRATED_BUTTONS|RESIZE",
@@ -11,5 +13,6 @@ return {
     window_frame = {
         font_size = 12.0
     },
-    launch_menu = launch_menu
+    launch_menu = launch_menu,
+    mouse_bindings = mouce
 }
