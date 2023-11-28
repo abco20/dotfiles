@@ -16,7 +16,7 @@ compinit
 # End of lines added by compinstall
 eval "$(starship init zsh)"
 
-export LANG=ja_JP.UTF-8
+export LANG=en_US.UTF-8
 export KCODE=u  # KCODEにUTF-8を設定
 
 setopt hist_ignore_dups
@@ -42,7 +42,6 @@ alias ls='lsd'
 alias l='ls'
 alias ll='ls -l'
 alias rm='rm -i'
-alias cat='bat'
 
 case ${OSTYPE} in
 	darwin*)
