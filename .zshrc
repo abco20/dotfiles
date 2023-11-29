@@ -64,4 +64,7 @@ zle -N history-beginning-search-forward-end history-search-end
 bindkey "^N" history-beginning-search-forward-end
 bindkey "^P" history-beginning-search-backward-end
 
+eval "$(register-python-argcomplete3 ros2)"
+eval "$(register-python-argcomplete3 colcon)"
+
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local
