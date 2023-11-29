@@ -14,7 +14,6 @@ zstyle :compinstall filename '$HOME/.zshrc'
 autoload -Uz compinit
 compinit
 # End of lines added by compinstall
-eval "$(starship init zsh)"
 
 export LANG=en_US.UTF-8
 export KCODE=u  # KCODEにUTF-8を設定
@@ -51,10 +50,13 @@ case ${OSTYPE} in
         ;;
 	linux*)
 		#linux
+		eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 		source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
         source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
         ;;
 esac
+
+eval "$(starship init zsh)"
 
 autoload history-search-end
 zle -N history-beginning-search-backward-end history-search-end
