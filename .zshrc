@@ -43,6 +43,7 @@ alias ll='ls -l'
 alias rm='rm -i'
 alias vi='nvim'
 alias vim='nvim'
+alias rm='trash-put'
 
 case ${OSTYPE} in
 	darwin*)

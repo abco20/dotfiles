@@ -4,3 +4,5 @@
 - zsh-syntax-highlighting
 - lsd
 - bat
+- trash-cli
+- starship
