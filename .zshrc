@@ -41,6 +41,8 @@ alias ls='lsd'
 alias l='ls'
 alias ll='ls -l'
 alias rm='rm -i'
+alias vi='nvim'
+alias vim='nvim'
 
 case ${OSTYPE} in
 	darwin*)
@@ -53,7 +55,14 @@ case ${OSTYPE} in
 		eval "$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 		source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
         source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-        ;;
+	DISTRO="humble"
+   #DISTRO="noetic"
+   
+   if [ $DISTRO = "humble" ]; then
+   	source /opt/ros/humble/setup.zsh
+   	source /usr/share/colcon_cd/function/colcon_cd.sh
+   fi
+	;;
 esac
 
 eval "$(starship init zsh)"
