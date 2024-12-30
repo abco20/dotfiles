@@ -1,0 +1,8 @@
+alias ls='lsd'
+alias l='ls'
+alias ll='ls -l'
+alias rm='rm -i'
+alias cat='batcat'
+alias vi='nvim'
+alias vim='nvim'
+alias rm='trash-put'

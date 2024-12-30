@@ -2,8 +2,8 @@ zstyle ":completion:*:commands" rehash 1
 
 # Lines configured by zsh-newuser-install
 HISTFILE=~/.histfile
-HISTSIZE=1000
-SAVEHIST=1000
+HISTSIZE=10000
+SAVEHIST=10000
 setopt autocd extendedglob nomatch
 unsetopt beep notify
 bindkey -d
@@ -34,16 +34,15 @@ zstyle ':completion:*' completer _complete _approximate
 zstyle ':completion:*' completer _complete _correct
 zstyle ':completion:*' completer _complete _approximate _prefix
 
+autoload -Uz up-line-or-beginning-search down-line-or-beginning-search
+zle -N up-line-or-beginning-search
+zle -N down-line-or-beginning-search
+
+[[ -n "${key[Up]}"   ]] && bindkey -- "${key[Up]}"   up-line-or-beginning-search
+[[ -n "${key[Down]}" ]] && bindkey -- "${key[Down]}" down-line-or-beginning-search
+
 
 setopt print_eight_bit
-
-alias ls='lsd'
-alias l='ls'
-alias ll='ls -l'
-alias rm='rm -i'
-alias vi='nvim'
-alias vim='nvim'
-alias rm='trash-put'
 
 case ${OSTYPE} in
 	darwin*)
@@ -55,11 +54,6 @@ case ${OSTYPE} in
 		#linux
 		source /usr/share/zsh-autosuggestions/zsh-autosuggestions.zsh
         source /usr/share/zsh-syntax-highlighting/zsh-syntax-highlighting.zsh
-	DISTRO="humble"
-   if [ $DISTRO = "humble" ]; then
-   	source /opt/ros/humble/setup.zsh
-   	source /usr/share/colcon_cd/function/colcon_cd.sh
-   fi
 	;;
 esac
 
@@ -71,7 +65,9 @@ zle -N history-beginning-search-forward-end history-search-end
 bindkey "^N" history-beginning-search-forward-end
 bindkey "^P" history-beginning-search-backward-end
 
-eval "$(register-python-argcomplete3 ros2)"
-eval "$(register-python-argcomplete3 colcon)"
+DOTFILES_DIR=$HOME/dotfiles
 
+source $DOTFILES_DIR/zsh/alias.zsh
+
+[ -d /opt/ros ] && source $DOTFILES_DIR/zsh/ros.zsh
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local
