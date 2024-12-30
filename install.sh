@@ -1,7 +1,5 @@
 #!/bin/bash -e
 
-IGNORE_PATTERN="^\.(git|travis)"
-
 echo "Install dotfile dependencies."
 
 sudo apt update
@@ -14,6 +12,11 @@ curl -sS https://starship.rs/install.sh | sh -s -- --yes
 
 echo "Create dotfile links."
 ln -snfv "$(pwd)/.zshrc" "$HOME/.zshrc"
+
+# .config下の各ファイルに対してリンク
+for f in $(ls .config); do
+  ln -snfv "$(pwd)/.config/$f" "$HOME/.config/$f"
+done
 
 sudo chsh -s $(which zsh)
 echo "Success"
