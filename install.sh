@@ -18,7 +18,7 @@ for f in $(ls .config); do
   ln -snfv "$(pwd)/.config/$f" "$HOME/.config/$f"
 done
 
-sudo chsh -s $(which zsh)
+chsh -s $(which zsh)
 echo "Success"
 
 zsh
