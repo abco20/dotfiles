@@ -7,3 +7,4 @@ fi
 
 eval "$(register-python-argcomplete3 ros2)"
 eval "$(register-python-argcomplete3 colcon)"
+export RCUTILS_COLORIZED_OUTPUT=1
