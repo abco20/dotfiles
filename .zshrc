@@ -69,5 +69,5 @@ DOTFILES_DIR=$HOME/dotfiles
 
 source $DOTFILES_DIR/zsh/alias.zsh
 
-[ -d /opt/ros ] && source $DOTFILES_DIR/zsh/ros.zsh
 [ -f ~/.zshrc.local ] && source ~/.zshrc.local
+[ -d /opt/ros ] && source $DOTFILES_DIR/zsh/ros.zsh
