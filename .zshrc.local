@@ -1,0 +1,3 @@
+if [ -f ~/ros2_ws/install/setup.zsh ]; then
+    source ~/ros2_ws/install/setup.zsh
+fi

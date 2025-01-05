@@ -18,6 +18,11 @@ for f in $(ls .config); do
   ln -snfv "$(pwd)/.config/$f" "$HOME/.config/$f"
 done
 
+# .zshrc.localが存在しない場合は作成
+if [ ! -e "$HOME/.zshrc.local" ]; then
+  cp "$(pwd)/.zshrc.local" "$HOME/.zshrc.local"
+fi
+
 chsh -s $(which zsh)
 echo "Success"
 
