@@ -1,0 +1,13 @@
+os:
+  editPreset: "vscode"
+promptToReturnFromSubprocess: false # removes "press enter to return to lazygit" popup
+gui:
+  language: "ja"
+  showIcons: true
+  nerdFontsVersion: "3"
+git:
+  paging:
+    colorArg: always
+    pager: delta --dark --paging=never --side-by-side --line-numbers --hyperlinks --hyperlinks-file-link-format="lazygit-edit://{path}:{line}"
+  allBranchesLogCmd: git log --graph --date=short --color=always --pretty=format:"%C(yellow)%h %C(white)%s %C(green)%d %C(red)%cn %C(blue)%cd - %cr"  --
+  branchLogCmd: git log --graph --date=short --color=always --pretty=format:"%C(yellow)%h %C(white)%s %C(green)%d %C(red)%cn %C(blue)%cd - %cr"  {{branchName}} --

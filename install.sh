@@ -8,6 +8,11 @@ sudo apt install -y zsh zsh-autosuggestions zsh-syntax-highlighting bat trash-cl
 wget https://github.com/lsd-rs/lsd/releases/download/v1.1.5/lsd-musl_1.1.5_amd64.deb
 sudo dpkg -i lsd-musl_1.1.5_amd64.deb
 rm lsd-musl_1.1.5_amd64.deb
+
+wget https://github.com/dandavison/delta/releases/download/0.18.2/git-delta_0.18.2_amd64.deb
+sudo dpkg -i git-delta_0.18.2_amd64.deb
+rm git-delta_0.18.2_amd64.deb
+
 curl -sS https://starship.rs/install.sh | sh -s -- --yes
 
 echo "Create dotfile links."
@@ -17,6 +22,28 @@ ln -snfv "$(pwd)/.zshrc" "$HOME/.zshrc"
 for f in $(ls .config); do
   ln -snfv "$(pwd)/.config/$f" "$HOME/.config/$f"
 done
+
+# ~/.gitconfigから~/.config/git/.gitconfigをincludeするようにする
+if [ ! -e "$HOME/.gitconfig" ]; then
+  # .gitconfigが存在しない場合は作成
+  echo -e "[include]\n\tpath = ~/.config/git/.gitconfig" > "$HOME/.gitconfig"
+  echo "Added include directive to ~/.gitconfig"
+else
+  # .gitconfigが存在する場合、すでにincludeが書かれているかチェック
+  if ! grep -q "path = ~/.config/git/.gitconfig" "$HOME/.gitconfig"; then
+    # includeセクションがあるかチェック
+    if grep -q "\[include\]" "$HOME/.gitconfig"; then
+      # includeセクションがある場合はセクション内に追記
+      sed -i '/\[include\]/a\\tpath = ~/.config/git/.gitconfig' "$HOME/.gitconfig"
+    else
+      # includeセクションがない場合は追加
+      echo -e "\n[include]\n\tpath = ~/.config/git/.gitconfig" >> "$HOME/.gitconfig"
+    fi
+    echo "Updated ~/.gitconfig to include ~/.config/git/.gitconfig"
+  else
+    echo "~/.gitconfig already includes ~/.config/git/.gitconfig"
+  fi
+fi
 
 # .zshrc.localが存在しない場合は作成
 if [ ! -e "$HOME/.zshrc.local" ]; then
