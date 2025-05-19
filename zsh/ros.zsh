@@ -11,3 +11,5 @@ fi
 eval "$(register-python-argcomplete ros2)"
 eval "$(register-python-argcomplete colcon)"
 export RCUTILS_COLORIZED_OUTPUT=1
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+export CYCLONEDDS_URI="file://$HOME/.config/cyclonedds.xml"
