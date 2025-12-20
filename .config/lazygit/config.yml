@@ -6,8 +6,9 @@ gui:
   showIcons: true
   nerdFontsVersion: "3"
 git:
-  paging:
-    colorArg: always
-    pager: delta --dark --paging=never --side-by-side --line-numbers --hyperlinks --hyperlinks-file-link-format="lazygit-edit://{path}:{line}"
-  allBranchesLogCmd: git log --graph --date=short --color=always --pretty=format:"%C(yellow)%h %C(white)%s %C(green)%d %C(red)%cn %C(blue)%cd - %cr"  --
+  pagers:
+    - colorArg: always
+      pager: delta --dark --paging=never --side-by-side --line-numbers --hyperlinks --hyperlinks-file-link-format="lazygit-edit://{path}:{line}"
   branchLogCmd: git log --graph --date=short --color=always --pretty=format:"%C(yellow)%h %C(white)%s %C(green)%d %C(red)%cn %C(blue)%cd - %cr"  {{branchName}} --
+  allBranchesLogCmds:
+    - git log --graph --date=short --color=always --pretty=format:"%C(yellow)%h %C(white)%s %C(green)%d %C(red)%cn %C(blue)%cd - %cr"  --

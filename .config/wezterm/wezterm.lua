@@ -22,5 +22,6 @@ return {
         font_size = font_size
     },
     launch_menu = launch_menu,
-    mouse_bindings = mouce
+    mouse_bindings = mouce,
+    enable_wayland = false
 }
