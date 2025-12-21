@@ -1,7 +1,7 @@
 #!/bin/bash -e
 
 sudo snap install bitwarden
-sudo snap install code
+sudo snap install code --classic
 sudo snap install vivaldi
 
 sudo mkdir -p /etc/apt/keyrings
