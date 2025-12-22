@@ -1,8 +1,10 @@
 #!/bin/bash -e
 
 sudo snap install bitwarden
-sudo snap install code --classic
+sudo snap install code --classicsudo 
 sudo snap install vivaldi
+sudo snap install discord
+sudo snap install slack
 
 sudo mkdir -p /etc/apt/keyrings
 curl -fsSL https://us-central1-apt.pkg.dev/doc/repo-signing-key.gpg | \
