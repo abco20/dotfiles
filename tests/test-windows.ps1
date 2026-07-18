@@ -53,6 +53,7 @@ function Assert-PowerShellSyntax([string]$Path) {
 
 Assert-PowerShellSyntax "$Root/scripts/bootstrap-windows.ps1"
 Assert-PowerShellSyntax "$Root/scripts/update-powershell-profile.ps1"
+Assert-PowerShellSyntax "$Root/scripts/install-hackgen-font.ps1"
 Assert-PowerShellSyntax "$Root/home/private_dot_config/powershell/main.ps1"
 Assert-PowerShellSyntax "$Root/home/run_once_after_10-migrate-mise-lock.ps1"
 
@@ -73,10 +74,18 @@ if ($Ignore -notmatch '\.config/sheldon' -or
 
 $WindowsBootstrap = Get-Content "$Root/scripts/bootstrap-windows.ps1" -Raw
 if ($WindowsBootstrap -notmatch 'Add-GitInclude' -or
-    $WindowsBootstrap -notmatch "GetFolderPath\('MyDocuments'\)" -or
+    $WindowsBootstrap -notmatch '\$PROFILE\.CurrentUserAllHosts' -or
+    $WindowsBootstrap -notmatch 'install-hackgen-font\.ps1' -or
+    $WindowsBootstrap -match "GetFolderPath\('MyDocuments'\)" -or
     $WindowsBootstrap -notmatch '-ProfilePath \$ProfilePath') {
     throw 'Windows bootstrap must configure Git includes and pass its profile path.'
 }
+$ProfileUpdater = Get-Content "$Root/scripts/update-powershell-profile.ps1" -Raw
+if ($ProfileUpdater -notmatch '\$PROFILE\.CurrentUserAllHosts' -or
+    $ProfileUpdater -match "GetFolderPath\('MyDocuments'\)") {
+    throw 'PowerShell profile updater must use CurrentUserAllHosts.'
+}
+& "$Root/scripts/install-hackgen-font.ps1" -DryRun
 $FullBootstrap = Get-Content "$Root/.github/workflows/full-bootstrap.yml" -Raw
 if ($FullBootstrap -match 'bootstrap-windows\.ps1[^\r\n]*-Desktop') {
     throw 'Windows full bootstrap must not enable Desktop.'

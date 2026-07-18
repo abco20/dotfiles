@@ -73,7 +73,6 @@ jobs:
           test ! -e "$HOME/.config/mpv/mpv.config"
           command -v wezterm
           command -v docker
-          command -v code
           wezterm --version
           docker --version
           docker compose version
@@ -96,7 +95,11 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Bootstrap host and desktop
-        run: ./scripts/bootstrap-macos.sh --profile host --desktop
+        run: |
+          ./scripts/bootstrap-macos.sh \
+            --profile host \
+            --desktop \
+            --skip-manual-desktop
 
       - name: Smoke test
         run: |
@@ -136,6 +139,9 @@ jobs:
       - name: Smoke test
         shell: pwsh
         run: |
+          if (-not (Test-Path $PROFILE.CurrentUserAllHosts)) {
+              throw "PowerShell profile was not created: $($PROFILE.CurrentUserAllHosts)"
+          }
           . $PROFILE.CurrentUserAllHosts
           $Expected = Join-Path $HOME '.config/mise-managed'
           if ($env:MISE_SYSTEM_CONFIG_DIR -ne $Expected) {

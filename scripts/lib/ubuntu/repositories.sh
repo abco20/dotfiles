@@ -15,9 +15,18 @@ configure_docker_repository() (
     docker.io docker-compose docker-compose-v2 docker-doc
     podman-docker containerd runc
   )
-  local codename work
+  local installed=()
+  local codename package work
 
-  run sudo apt-get remove -y "${conflicting[@]}" || true
+  for package in "${conflicting[@]}"; do
+    if dpkg-query -W -f='${db:Status-Abbrev}' "$package" 2>/dev/null |
+        grep -q '^ii'; then
+      installed+=("$package")
+    fi
+  done
+  if ((${#installed[@]})); then
+    run sudo apt-get remove -y "${installed[@]}"
+  fi
   run sudo install -m 0755 -d /etc/apt/keyrings
   install_gpg_key \
     https://download.docker.com/linux/ubuntu/gpg \

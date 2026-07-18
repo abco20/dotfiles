@@ -12,11 +12,10 @@ if ($PSVersionTable.PSVersion.Major -lt 7) {
 }
 
 if ([string]::IsNullOrWhiteSpace($ProfilePath)) {
-    $Documents = [Environment]::GetFolderPath('MyDocuments')
-    if ([string]::IsNullOrWhiteSpace($Documents)) {
-        $Documents = Join-Path $HOME 'Documents'
+    $ProfilePath = $PROFILE.CurrentUserAllHosts
+    if ([string]::IsNullOrWhiteSpace($ProfilePath)) {
+        throw 'CurrentUserAllHosts profile path is unavailable.'
     }
-    $ProfilePath = Join-Path $Documents 'PowerShell/profile.ps1'
 }
 
 $Start = '# >>> abco20 dotfiles >>>'

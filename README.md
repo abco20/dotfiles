@@ -66,9 +66,12 @@ desktop coreに加えて以下を導入します。
 personal appsはPR必須のfull bootstrapでは実インストールせず、manifestの静的検証を行います。
 
 macOSでも`--personal-apps`を指定すると同じpersonal appsを追加できます。
+Docker Desktopは`packages/macos/Brewfile.desktop-manual`で管理し、通常のdesktop bootstrapでは導入します。
+hosted CIでは`--skip-manual-desktop`を指定して実インストールを除外します。
 
 ### Windows desktop
 
 Windows desktop bootstrapはWindows 11を対象としています。Windows Serverは対象外です。
 `packages/windows/desktop.json`はdesktop core、`packages/windows/personal.json`はpersonal appsを管理します。
+HackGen Nerd Fontはdesktop bootstrapから`install-hackgen-font.ps1`を実行して導入します。
 今回のWindows bootstrapはpersonal appsのinstall switchを持たず、personal manifestは静的検証のみ行います。

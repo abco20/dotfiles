@@ -103,7 +103,7 @@ test_desktop_dry_run() {
 }
 
 test_macos_personal_selection() {
-  local work fake_bin core_output personal_output
+  local work fake_bin core_output ci_output personal_output
   work=$(mktemp -d)
   fake_bin=$work/fake-bin
   mkdir -p "$fake_bin"
@@ -114,7 +114,14 @@ test_macos_personal_selection() {
     --profile host --desktop --dry-run > "$work/core"
   core_output=$(<"$work/core")
   [[ $core_output == *'Brewfile.desktop'* ]]
+  [[ $core_output == *'Brewfile.desktop-manual'* ]]
   [[ $core_output != *'Brewfile.personal'* ]]
+
+  PATH="$fake_bin:$PATH" "$root/scripts/bootstrap-macos.sh" \
+    --profile host --desktop --skip-manual-desktop --dry-run > "$work/ci"
+  ci_output=$(<"$work/ci")
+  [[ $ci_output == *'Brewfile.desktop'* ]]
+  [[ $ci_output != *'Brewfile.desktop-manual'* ]]
 
   PATH="$fake_bin:$PATH" "$root/scripts/bootstrap-macos.sh" \
     --profile host --desktop --personal-apps --dry-run > "$work/personal"
@@ -124,6 +131,11 @@ test_macos_personal_selection() {
   if PATH="$fake_bin:$PATH" "$root/scripts/bootstrap-macos.sh" \
       --profile host --personal-apps --dry-run >/dev/null 2>&1; then
     echo 'macOS personal apps without desktop was accepted' >&2
+    exit 1
+  fi
+  if PATH="$fake_bin:$PATH" "$root/scripts/bootstrap-macos.sh" \
+      --profile host --skip-manual-desktop --dry-run >/dev/null 2>&1; then
+    echo 'macOS manual desktop skip without desktop was accepted' >&2
     exit 1
   fi
   rm -rf "$work"
@@ -166,11 +178,14 @@ test_macos_personal_selection
 test_snap_classic_behavior
 test_source_file_update
 
-grep -Fxq 'cask "docker-desktop"' "$root/packages/macos/Brewfile.desktop"
-for cask in docker-desktop font-hackgen visual-studio-code wezterm; do
+grep -Fxq 'cask "docker-desktop"' \
+  "$root/packages/macos/Brewfile.desktop-manual"
+for cask in font-hackgen-nerd visual-studio-code wezterm; do
   grep -Fxq "cask \"$cask\"" "$root/packages/macos/Brewfile.desktop"
   ! grep -Fxq "cask \"$cask\"" "$root/packages/macos/Brewfile.personal"
 done
+! grep -Fq 'docker-desktop' "$root/packages/macos/Brewfile.desktop"
+! grep -Fq 'font-hackgen"' "$root/packages/macos/Brewfile.desktop"
 for cask in antigravity bitwarden discord nextcloud slack vivaldi; do
   grep -Fxq "cask \"$cask\"" "$root/packages/macos/Brewfile.personal"
   ! grep -Fxq "cask \"$cask\"" "$root/packages/macos/Brewfile.desktop"

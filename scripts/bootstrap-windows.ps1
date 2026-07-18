@@ -34,7 +34,10 @@ function Add-GitInclude([string]$Config, [string]$Include) {
 }
 
 Install-WingetFile "$Root/packages/windows/common.json"
-if ($Desktop) { Install-WingetFile "$Root/packages/windows/desktop.json" }
+if ($Desktop) {
+    Install-WingetFile "$Root/packages/windows/desktop.json"
+    & "$PSScriptRoot/install-hackgen-font.ps1" -DryRun:$DryRun
+}
 if ($DryRun) { return }
 
 $env:DOTFILES_PROFILE = 'host'
@@ -66,9 +69,8 @@ if ($LASTEXITCODE -ne 0) {
     throw "mise install failed with exit code $LASTEXITCODE."
 }
 
-$Documents = [Environment]::GetFolderPath('MyDocuments')
-if ([string]::IsNullOrWhiteSpace($Documents)) {
-    $Documents = Join-Path $HOME 'Documents'
+$ProfilePath = $PROFILE.CurrentUserAllHosts
+if ([string]::IsNullOrWhiteSpace($ProfilePath)) {
+    throw 'CurrentUserAllHosts profile path is unavailable.'
 }
-$ProfilePath = Join-Path $Documents 'PowerShell/profile.ps1'
 & "$PSScriptRoot/update-powershell-profile.ps1" -ProfilePath $ProfilePath
