@@ -82,11 +82,7 @@ if [[ $profile == host ]]; then
 fi
 mise x aqua:twpayne/chezmoi@latest -- chezmoi "${chezmoi_args[@]}"
 
-if [[ ${DOTFILES_ALLOW_UNLOCKED:-false} == true ]]; then
-  mise install
-else
-  mise install --locked
-fi
+mise install
 
 mise exec -- chezmoi --version
 zsh -dfc 'source "$HOME/.zshrc"'

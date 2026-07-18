@@ -77,6 +77,32 @@ test_modifier() {
 test_modifier "$root/home/modify_dot_zshrc"
 test_modifier "$root/home/modify_dot_gitconfig"
 test_modifier "$root/home/private_dot_config/git/modify_config"
+
+test_lock_migration_failure() {
+  local work fake_bin config_root lock_before
+  work=$(mktemp -d)
+  fake_bin="$work/bin"
+  config_root="$work/mise"
+  mkdir -p "$fake_bin" "$config_root"
+  printf '%s\n' '[tools]' 'deno = "latest"' > "$config_root/config.toml"
+  printf '%s\n' \
+    '# existing machine-local lock content' \
+    'aqua:starship/starship' \
+    'aqua:rossmacarthur/sheldon' > "$config_root/mise.lock"
+  printf '%s\n' '#!/bin/sh' 'exit 1' > "$fake_bin/mise"
+  chmod +x "$fake_bin/mise"
+  lock_before=$(sha256sum "$config_root/mise.lock")
+  if DOTFILES_MISE_CONFIG_ROOT="$config_root" \
+      PATH="$fake_bin:/usr/bin:/bin" \
+      bash "$root/home/run_once_after_10-migrate-mise-lock.sh"; then
+    echo "mise lock migration unexpectedly succeeded" >&2
+    exit 1
+  fi
+  [[ $lock_before == "$(sha256sum "$config_root/mise.lock")" ]]
+  rm -rf "$work"
+}
+
+test_lock_migration_failure
 chezmoi execute-template \
   --source "$root/home" \
   --file "$root/home/private_dot_config/zsh/ros.zsh.tmpl" \
@@ -91,6 +117,7 @@ windows_ignore=$(chezmoi execute-template \
   --override-data '{"profile":"host","desktop":false,"robotics":false,"chezmoi":{"os":"windows"}}')
 grep -q '^10-migrate-mise-lock.sh$' <<< "$windows_ignore"
 ! grep -q '^10-migrate-mise-lock.ps1$' <<< "$windows_ignore"
+grep -q '^.config/sheldon$' <<< "$windows_ignore"
 
 printf '%s\n' 'export APP_ADDED=1' > "$HOME/.zshrc"
 mkdir -p "$HOME/.config/git" "$HOME/.config/mise/conf.d"
@@ -145,7 +172,8 @@ grep -q '^lockfile = true$' "$HOME/.config/mise-managed/conf.d/00-settings.toml"
 grep -q '^export MISE_SYSTEM_CONFIG_DIR=' "$HOME/.config/zsh/main.zsh"
 ! grep -R -q 'MISE_LOCKFILE=false' \
   "$root/home" "$root/scripts" "$root/.github" "$root/README.md"
-grep -q '^"aqua:rossmacarthur/sheldon" = "latest"$' "$HOME/.config/mise-managed/conf.d/10-common.toml"
+grep -Fq '"aqua:rossmacarthur/sheldon" = {' "$HOME/.config/mise-managed/conf.d/10-common.toml"
+grep -Fq 'os = ["linux", "macos"]' "$HOME/.config/mise-managed/conf.d/10-common.toml"
 [[ -e $HOME/.config/sheldon/plugins.toml ]]
 grep -q '^github = "zsh-users/zsh-autosuggestions"$' "$HOME/.config/sheldon/plugins.toml"
 grep -q '^github = "zsh-users/zsh-syntax-highlighting"$' "$HOME/.config/sheldon/plugins.toml"

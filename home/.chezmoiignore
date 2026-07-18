@@ -1,6 +1,7 @@
 {{- if eq .chezmoi.os "windows" }}
 .zshrc
 .config/zsh
+.config/sheldon
 10-migrate-mise-lock.sh
 {{- else }}
 .config/powershell

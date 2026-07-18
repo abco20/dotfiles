@@ -32,22 +32,9 @@ $env:MISE_SYSTEM_CONFIG_DIR =
     Join-Path $HOME '.config/mise-managed'
 
 mise x aqua:twpayne/chezmoi@latest -- chezmoi init --apply --less-interactive --source $Root
-mise install --locked
+mise install
+if ($LASTEXITCODE -ne 0) {
+    throw "mise install failed with exit code $LASTEXITCODE."
+}
 
-$ManagedMain = Join-Path $HOME '.config/powershell/main.ps1'
-$ManagedLocal = Join-Path $HOME '.config/powershell/local.ps1'
-$ProfilePath = $PROFILE.CurrentUserAllHosts
-$Start = '# >>> abco20 dotfiles >>>'
-$End = '# <<< abco20 dotfiles <<<'
-$Block = @"
-$Start
-if (Test-Path '$ManagedMain') { . '$ManagedMain' }
-if (Test-Path '$ManagedLocal') { . '$ManagedLocal' }
-$End
-"@
-
-$Existing = if (Test-Path $ProfilePath) { Get-Content $ProfilePath -Raw } else { '' }
-$Pattern = '(?ms)^' + [regex]::Escape($Start) + '.*?^' + [regex]::Escape($End) + '\r?\n?'
-$Updated = ([regex]::Replace($Existing, $Pattern, '')).TrimEnd() + "`r`n" + $Block + "`r`n"
-New-Item -ItemType Directory -Force -Path (Split-Path -Parent $ProfilePath) | Out-Null
-Set-Content -Path $ProfilePath -Value $Updated -Encoding utf8NoBOM
+& "$PSScriptRoot/update-powershell-profile.ps1"

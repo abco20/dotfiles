@@ -7,12 +7,14 @@ on:
 jobs:
   ubuntu:
     strategy:
+      fail-fast: false
       matrix:
         os: [ubuntu-22.04, ubuntu-24.04]
         profile: [container, host]
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+
       - name: Install mise and zsh
         run: |
           sudo apt-get update
@@ -20,7 +22,8 @@ jobs:
           sudo extrepo enable mise
           sudo apt-get update
           sudo apt-get install -y mise
-      - name: Render and test
+
+      - name: Apply chezmoi
         env:
           DOTFILES_PROFILE: ${{ matrix.profile }}
           DOTFILES_DESKTOP: "false"
@@ -29,8 +32,34 @@ jobs:
           export MISE_SYSTEM_CONFIG_DIR="$HOME/.config/mise-managed"
           mise x aqua:twpayne/chezmoi@latest -- \
             chezmoi init --apply --source "$GITHUB_WORKSPACE"
-          mise install --locked
-          mise config ls | grep -q '.config/mise-managed/conf.d/10-common.toml'
+
+      - name: Install mise tools
+        run: |
+          export MISE_SYSTEM_CONFIG_DIR="$HOME/.config/mise-managed"
+          shared_lock_before=$(sha256sum "$MISE_SYSTEM_CONFIG_DIR/mise.lock")
+          mise install
+          test "$shared_lock_before" = \
+            "$(sha256sum "$MISE_SYSTEM_CONFIG_DIR/mise.lock")"
+
+      - name: Verify mise config
+        run: |
+          export MISE_SYSTEM_CONFIG_DIR="$HOME/.config/mise-managed"
+          mise --version
+          mise config ls > "$RUNNER_TEMP/mise-config.txt"
+          cat "$RUNNER_TEMP/mise-config.txt"
+          grep -Fq '.config/mise-managed/conf.d/10-common.toml' \
+            "$RUNNER_TEMP/mise-config.txt"
+          mise ls
+          find "$MISE_SYSTEM_CONFIG_DIR" -maxdepth 3 -type f -print
+          find "$HOME/.config/mise" -maxdepth 2 -type f -print
+
+      - name: Run POSIX tests
+        env:
+          DOTFILES_PROFILE: ${{ matrix.profile }}
+          DOTFILES_DESKTOP: "false"
+          DOTFILES_ROBOTICS: "false"
+        run: |
+          export MISE_SYSTEM_CONFIG_DIR="$HOME/.config/mise-managed"
           mise exec -- "$GITHUB_WORKSPACE/tests/test-posix.sh"
 
       - name: Test system and user lock isolation
@@ -53,7 +82,6 @@ jobs:
             "$(sha256sum "$HOME/.config/mise/config.toml")"
           test "$local_lock_before" = \
             "$(sha256sum "$HOME/.config/mise/mise.lock")"
-          mise install --locked
 
   windows:
     runs-on: windows-2025

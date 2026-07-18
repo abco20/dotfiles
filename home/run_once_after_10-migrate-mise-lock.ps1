@@ -1,6 +1,10 @@
 $ErrorActionPreference = 'Stop'
 
-$ConfigRoot = Join-Path $HOME '.config/mise'
+$ConfigRoot = if ($env:DOTFILES_MISE_CONFIG_ROOT) {
+    $env:DOTFILES_MISE_CONFIG_ROOT
+} else {
+    Join-Path $HOME '.config/mise'
+}
 $Config = Join-Path $ConfigRoot 'config.toml'
 $Lock = Join-Path $ConfigRoot 'mise.lock'
 $LegacyConfDir = Join-Path $ConfigRoot 'conf.d'
@@ -36,21 +40,35 @@ if (-not (Get-Command mise -ErrorAction SilentlyContinue)) {
     throw 'mise is required to migrate the machine-local lockfile.'
 }
 
-Set-Content -Path $Lock -Value '# Machine-local mise lockfile.' -Encoding utf8NoBOM
-$EmptySystemConfig = Join-Path ([System.IO.Path]::GetTempPath()) "mise-system-$([guid]::NewGuid())"
+$TempRoot = Join-Path `
+    ([System.IO.Path]::GetTempPath()) `
+    "mise-migration-$([guid]::NewGuid())"
+$TempConfigRoot = Join-Path $TempRoot 'mise'
+$EmptySystemConfig = Join-Path $TempRoot 'system'
+$TempLock = Join-Path $TempConfigRoot 'mise.lock'
+$PreviousSystemConfig = $env:MISE_SYSTEM_CONFIG_DIR
+$PreviousGlobalConfig = $env:MISE_GLOBAL_CONFIG_FILE
+
+New-Item -ItemType Directory -Path $TempConfigRoot | Out-Null
 New-Item -ItemType Directory -Path $EmptySystemConfig | Out-Null
 try {
-    $PreviousSystemConfig = $env:MISE_SYSTEM_CONFIG_DIR
-    $PreviousConfigDir = $env:MISE_CONFIG_DIR
+    Copy-Item $Config (Join-Path $TempConfigRoot 'config.toml')
+    Set-Content `
+        -Path $TempLock `
+        -Value '# Machine-local mise lockfile.' `
+        -Encoding utf8NoBOM
+
     $env:MISE_SYSTEM_CONFIG_DIR = $EmptySystemConfig
-    $env:MISE_CONFIG_DIR = $ConfigRoot
-    mise lock --global --platform windows-x64 --yes
+    $env:MISE_GLOBAL_CONFIG_FILE = Join-Path $TempConfigRoot 'config.toml'
+    mise -C $TempRoot lock --global --platform windows-x64 --yes
     if ($LASTEXITCODE -ne 0) {
         throw "mise lock failed with exit code $LASTEXITCODE."
     }
+
+    Move-Item -Force $TempLock $Lock
 }
 finally {
     $env:MISE_SYSTEM_CONFIG_DIR = $PreviousSystemConfig
-    $env:MISE_CONFIG_DIR = $PreviousConfigDir
-    Remove-Item -Recurse -Force $EmptySystemConfig
+    $env:MISE_GLOBAL_CONFIG_FILE = $PreviousGlobalConfig
+    Remove-Item -Recurse -Force $TempRoot -ErrorAction SilentlyContinue
 }

@@ -31,5 +31,5 @@ if [[ $profile == host ]]; then
   chezmoi_args+=(--less-interactive)
 fi
 mise x aqua:twpayne/chezmoi@latest -- chezmoi "${chezmoi_args[@]}"
-mise install --locked
+mise install
 zsh -dfc 'source "$HOME/.zshrc"'
