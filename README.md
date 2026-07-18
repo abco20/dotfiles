@@ -69,12 +69,8 @@ macOSでも`--personal-apps`を指定すると同じpersonal appsを追加でき
 macOSの通常のdesktop bootstrapでは、`Brewfile.desktop-manual`から
 Docker DesktopとHackGen Nerd Fontも導入します。
 
-GitHub-hosted macOS CIでは、GUI caskを実インストールしません。
-`--desktop --skip-desktop-packages`を使用してdesktop用dotfilesを適用し、
-Brewfileに記載したcaskは`brew info --cask`による静的検証のみ行います。
-
-通常のmacOS desktop bootstrapでは、これまでどおりdesktop用caskを
-すべてインストールします。
+GitHub-hosted CIでは`--skip-manual-desktop`を指定し、
+これらの実機向けパッケージを除外します。
 
 ### Windows desktop
 

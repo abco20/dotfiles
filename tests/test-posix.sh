@@ -123,19 +123,6 @@ test_macos_personal_selection() {
   [[ $ci_output == *'Brewfile.desktop'* ]]
   [[ $ci_output != *'Brewfile.desktop-manual'* ]]
 
-  PATH="$fake_bin:$PATH" \
-    "$root/scripts/bootstrap-macos.sh" \
-      --profile host \
-      --desktop \
-      --skip-desktop-packages \
-      --dry-run > "$work/skip-desktop-packages"
-  skip_output=$(<"$work/skip-desktop-packages")
-  [[ $skip_output == *'Brewfile.common'* ]]
-  [[ $skip_output == *'Brewfile.host'* ]]
-  [[ $skip_output != *'Brewfile.desktop '* ]]
-  [[ $skip_output != *'Brewfile.desktop-manual'* ]]
-  [[ $skip_output != *'Brewfile.personal'* ]]
-
   PATH="$fake_bin:$PATH" "$root/scripts/bootstrap-macos.sh" \
     --profile host --desktop --personal-apps --dry-run > "$work/personal"
   personal_output=$(<"$work/personal")
@@ -149,11 +136,6 @@ test_macos_personal_selection() {
   if PATH="$fake_bin:$PATH" "$root/scripts/bootstrap-macos.sh" \
       --profile host --skip-manual-desktop --dry-run >/dev/null 2>&1; then
     echo 'macOS manual desktop skip without desktop was accepted' >&2
-    exit 1
-  fi
-  if PATH="$fake_bin:$PATH" "$root/scripts/bootstrap-macos.sh" \
-      --profile host --skip-desktop-packages --dry-run >/dev/null 2>&1; then
-    echo 'macOS desktop package skip without desktop was accepted' >&2
     exit 1
   fi
   rm -rf "$work"

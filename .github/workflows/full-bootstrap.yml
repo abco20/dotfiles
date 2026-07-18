@@ -146,12 +146,14 @@ jobs:
               --cask
           )
 
-      - name: Bootstrap host and desktop config
+      - name: Bootstrap host and desktop
+        env:
+          PS4: '+ ${BASH_SOURCE}:${LINENO}: '
         run: |
-          ./scripts/bootstrap-macos.sh \
+          bash -x ./scripts/bootstrap-macos.sh \
             --profile host \
             --desktop \
-            --skip-desktop-packages
+            --skip-manual-desktop
 
       - name: Smoke test
         run: |
@@ -232,16 +234,40 @@ jobs:
           mise config ls
           mise ls
 
-      - name: Check Windows tools
+      - name: Check Windows chezmoi
         shell: pwsh
         run: |
           . $PROFILE.CurrentUserAllHosts
-
           mise exec -- chezmoi --version
+
+      - name: Check Windows starship
+        shell: pwsh
+        run: |
+          . $PROFILE.CurrentUserAllHosts
           mise exec -- starship --version
+
+      - name: Check Windows ripgrep
+        shell: pwsh
+        run: |
+          . $PROFILE.CurrentUserAllHosts
           mise exec -- rg --version
+
+      - name: Check Windows lsd
+        shell: pwsh
+        run: |
+          . $PROFILE.CurrentUserAllHosts
           mise exec -- lsd --version
+
+      - name: Check Windows bat
+        shell: pwsh
+        run: |
+          . $PROFILE.CurrentUserAllHosts
           mise exec -- bat --version
+
+      - name: Check Windows Neovim
+        shell: pwsh
+        run: |
+          . $PROFILE.CurrentUserAllHosts
           mise exec -- nvim --version
 
       - name: Check Windows aliases
