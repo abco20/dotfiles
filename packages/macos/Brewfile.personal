@@ -1,0 +1,6 @@
+cask "antigravity"
+cask "bitwarden"
+cask "discord"
+cask "nextcloud"
+cask "slack"
+cask "vivaldi"

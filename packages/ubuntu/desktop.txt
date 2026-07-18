@@ -1,5 +1,0 @@
-fontconfig
-unzip
-gnupg
-software-properties-common
-snapd

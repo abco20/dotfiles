@@ -10,9 +10,12 @@
         "Type": "Microsoft.PreIndexed.Package"
       },
       "Packages": [
-        { "PackageIdentifier": "Docker.DockerDesktop" },
-        { "PackageIdentifier": "Microsoft.VisualStudioCode" },
-        { "PackageIdentifier": "wez.wezterm" }
+        { "PackageIdentifier": "Bitwarden.Bitwarden" },
+        { "PackageIdentifier": "Discord.Discord" },
+        { "PackageIdentifier": "Google.Antigravity" },
+        { "PackageIdentifier": "Nextcloud.NextcloudDesktop" },
+        { "PackageIdentifier": "SlackTechnologies.Slack" },
+        { "PackageIdentifier": "Vivaldi.Vivaldi" }
       ]
     }
   ],

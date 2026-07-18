@@ -73,19 +73,12 @@ jobs:
           test ! -e "$HOME/.config/mpv/mpv.config"
           command -v wezterm
           command -v docker
-          command -v nextcloud
           command -v code
-          command -v antigravity
           wezterm --version
           docker --version
           docker compose version
           fc-match HackGen | grep -Fq HackGen
-          snap list bitwarden
           snap list code
-          snap list discord
-          snap list slack
-          snap list vivaldi
-          antigravity --version
           mise --version
           mise config ls
           mise ls

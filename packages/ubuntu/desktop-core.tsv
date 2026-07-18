@@ -1,0 +1,10 @@
+# provider       package
+apt               fontconfig
+apt               unzip
+apt               gnupg
+apt               software-properties-common
+apt               snapd
+repository-apt    wezterm
+repository-apt    docker
+snap-classic      code
+font              hackgen

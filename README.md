@@ -12,8 +12,14 @@
 # Ubuntu + desktop
 ./scripts/bootstrap-linux.sh --profile host --desktop
 
+# Ubuntu + desktop + personal apps
+./scripts/bootstrap-linux.sh --profile host --desktop --personal-apps
+
 # macOS（Homebrewが必要）
 ./scripts/bootstrap-macos.sh --profile host --desktop
+
+# macOS + personal apps
+./scripts/bootstrap-macos.sh --profile host --desktop --personal-apps
 ```
 
 ```powershell
@@ -30,21 +36,39 @@ chezmoiとmiseの完全な適用プレビューではありません。
 ./scripts/bootstrap-linux.sh --profile host --desktop
 ```
 
-追加で以下を導入します。
+開発用desktop coreとして以下を導入します。
 
 * WezTerm
 * Docker Engine
 * HackGen Nerd Font
-* Nextcloud Desktop
+* Visual Studio Code
+
+Docker groupへの追加は、再ログイン後に反映されます。
+
+### Personal apps
+
+```bash
+./scripts/bootstrap-linux.sh \
+  --profile host \
+  --desktop \
+  --personal-apps
+```
+
+desktop coreに加えて以下を導入します。
+
 * Bitwarden
 * Discord
 * Slack
 * Vivaldi
-* Visual Studio Code
+* Nextcloud Desktop
 * Antigravity
 
-Docker groupへの追加は、再ログイン後に反映されます。
+personal appsはPR必須のfull bootstrapでは実インストールせず、manifestの静的検証を行います。
+
+macOSでも`--personal-apps`を指定すると同じpersonal appsを追加できます。
 
 ### Windows desktop
 
 Windows desktop bootstrapはWindows 11を対象としています。Windows Serverは対象外です。
+`packages/windows/desktop.json`はdesktop core、`packages/windows/personal.json`はpersonal appsを管理します。
+今回のWindows bootstrapはpersonal appsのinstall switchを持たず、personal manifestは静的検証のみ行います。

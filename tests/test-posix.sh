@@ -18,20 +18,163 @@ export DOTFILES_DESKTOP=${DOTFILES_DESKTOP:-false}
 export DOTFILES_ROBOTICS=${DOTFILES_ROBOTICS:-false}
 export DOTFILES_ROS_DISTRO=${DOTFILES_ROS_DISTRO:-}
 
-[[ -f $root/packages/ubuntu/desktop.txt ]]
-grep -Fq 'packages/ubuntu/desktop.txt' "$root/scripts/bootstrap-linux.sh"
-grep -Fq 'install_desktop_extras' "$root/scripts/bootstrap-linux.sh"
-grep -Fq 'install_desktop_snaps' "$root/scripts/bootstrap-linux.sh"
-grep -Fq 'install_antigravity' "$root/scripts/bootstrap-linux.sh"
-for desktop_package in bitwarden code discord slack vivaldi antigravity; do
-  grep -Fq "$desktop_package" "$root/scripts/bootstrap-linux.sh"
-done
-grep -Fq 'if [[ $desktop == true ]]; then' "$root/scripts/bootstrap-linux.sh"
+core_manifest=$root/packages/ubuntu/desktop-core.tsv
+personal_manifest=$root/packages/ubuntu/desktop-personal.tsv
+[[ -f $core_manifest && -f $personal_manifest ]]
+
+# shellcheck source=../scripts/lib/ubuntu/common.sh
+source "$root/scripts/lib/ubuntu/common.sh"
+# shellcheck source=../scripts/lib/ubuntu/repositories.sh
+source "$root/scripts/lib/ubuntu/repositories.sh"
+# shellcheck source=../scripts/lib/ubuntu/desktop.sh
+source "$root/scripts/lib/ubuntu/desktop.sh"
+
+validate_desktop_manifest() {
+  local file=$1 provider package
+  while read -r provider package; do
+    [[ -z ${provider:-} || $provider == \#* ]] && continue
+    [[ -n ${package:-} ]]
+    case $provider in
+      apt|repository-apt|snap|snap-classic|font) ;;
+      *) echo "unknown provider in $file: $provider" >&2; return 1 ;;
+    esac
+  done < "$file"
+}
+
+validate_desktop_manifest "$core_manifest"
+validate_desktop_manifest "$personal_manifest"
+mapfile -t core_classic < <(read_packages_by_provider "$core_manifest" snap-classic)
+[[ ${core_classic[*]} == code ]]
+mapfile -t core_personal < <(
+  read_packages_by_provider "$core_manifest" snap
+)
+[[ ${#core_personal[@]} == 0 ]]
+mapfile -t personal_snaps < <(
+  read_packages_by_provider "$personal_manifest" snap
+)
+[[ " ${personal_snaps[*]} " == *' bitwarden '* ]]
+[[ " ${personal_snaps[*]} " == *' discord '* ]]
+[[ " ${personal_snaps[*]} " == *' slack '* ]]
+[[ " ${personal_snaps[*]} " == *' vivaldi '* ]]
+
 if "$root/scripts/bootstrap-linux.sh" \
     --profile container --desktop --dry-run >/dev/null 2>&1; then
   echo 'container + desktop was accepted' >&2
   exit 1
 fi
+if "$root/scripts/bootstrap-linux.sh" \
+    --profile host --personal-apps --dry-run >/dev/null 2>&1; then
+  echo 'personal apps without desktop was accepted' >&2
+  exit 1
+fi
+
+test_desktop_dry_run() {
+  local work fake_bin core_output personal_output
+  local VERSION_CODENAME=noble UBUNTU_CODENAME=noble
+  work=$(mktemp -d)
+  fake_bin=$work/fake-bin
+  mkdir -p "$fake_bin"
+  printf '%s\n' '#!/bin/sh' 'echo "sudo unexpectedly executed" >&2' 'exit 99' > "$fake_bin/sudo"
+  printf '%s\n' '#!/bin/sh' 'echo "snap unexpectedly executed" >&2' 'exit 99' > "$fake_bin/snap"
+  chmod +x "$fake_bin/sudo" "$fake_bin/snap"
+
+  PATH="$fake_bin:$PATH" "$root/scripts/bootstrap-linux.sh" \
+    --profile host --desktop --dry-run > "$work/core"
+  core_output=$(<"$work/core")
+  [[ $core_output == *'wezterm'* ]]
+  [[ $core_output == *'docker-ce'* ]]
+  [[ $core_output == *'snap install code --classic'* ]]
+  [[ $core_output != *'bitwarden'* ]]
+  [[ $core_output != *'nextcloud'* ]]
+  [[ $core_output != *'antigravity'* ]]
+
+  PATH="$fake_bin:$PATH" "$root/scripts/bootstrap-linux.sh" \
+    --profile host --desktop --personal-apps --dry-run > "$work/personal"
+  personal_output=$(<"$work/personal")
+  [[ $personal_output == *'bitwarden'* ]]
+  [[ $personal_output == *'nextcloud-desktop'* ]]
+  [[ $personal_output == *'antigravity'* ]]
+
+  dry_run=true
+  install_desktop_apps true > "$work/desktop-only"
+  [[ $(grep -c '^+ sudo apt-get update ' "$work/desktop-only") == 1 ]]
+  dry_run=false
+  rm -rf "$work"
+}
+
+test_macos_personal_selection() {
+  local work fake_bin core_output personal_output
+  work=$(mktemp -d)
+  fake_bin=$work/fake-bin
+  mkdir -p "$fake_bin"
+  printf '%s\n' '#!/bin/sh' 'exit 0' > "$fake_bin/brew"
+  chmod +x "$fake_bin/brew"
+
+  PATH="$fake_bin:$PATH" "$root/scripts/bootstrap-macos.sh" \
+    --profile host --desktop --dry-run > "$work/core"
+  core_output=$(<"$work/core")
+  [[ $core_output == *'Brewfile.desktop'* ]]
+  [[ $core_output != *'Brewfile.personal'* ]]
+
+  PATH="$fake_bin:$PATH" "$root/scripts/bootstrap-macos.sh" \
+    --profile host --desktop --personal-apps --dry-run > "$work/personal"
+  personal_output=$(<"$work/personal")
+  [[ $personal_output == *'Brewfile.desktop'* ]]
+  [[ $personal_output == *'Brewfile.personal'* ]]
+  if PATH="$fake_bin:$PATH" "$root/scripts/bootstrap-macos.sh" \
+      --profile host --personal-apps --dry-run >/dev/null 2>&1; then
+    echo 'macOS personal apps without desktop was accepted' >&2
+    exit 1
+  fi
+  rm -rf "$work"
+}
+
+test_snap_classic_behavior() {
+  local work fake_bin
+  work=$(mktemp -d)
+  fake_bin=$work/fake-bin
+  mkdir -p "$fake_bin"
+  printf '%s\n' '#!/bin/sh' 'if [ "$1" = list ]; then exit 1; fi' 'exit 0' > "$fake_bin/snap"
+  printf '%s\n' '#!/bin/sh' 'printf "%s\\n" "$*" >> "$COMMAND_LOG"' '"$@"' > "$fake_bin/sudo"
+  chmod +x "$fake_bin/snap" "$fake_bin/sudo"
+  COMMAND_LOG=$work/commands PATH="$fake_bin:$PATH" \
+    install_snap_classic_packages code
+  grep -Fxq 'snap install code --classic' "$work/commands"
+  rm -rf "$work"
+}
+
+test_source_file_update() {
+  local work fake_bin source destination
+  work=$(mktemp -d)
+  fake_bin=$work/fake-bin
+  source=$work/source.list
+  destination=$work/installed.list
+  mkdir -p "$fake_bin"
+  printf '%s\n' '#!/bin/sh' '"$@"' > "$fake_bin/sudo"
+  chmod +x "$fake_bin/sudo"
+  printf '%s\n' 'first content' > "$source"
+  PATH="$fake_bin:$PATH" install_source_file "$source" "$destination"
+  cmp -s "$source" "$destination"
+  printf '%s\n' 'changed content' > "$source"
+  PATH="$fake_bin:$PATH" install_source_file "$source" "$destination"
+  cmp -s "$source" "$destination"
+  rm -rf "$work"
+}
+
+test_desktop_dry_run
+test_macos_personal_selection
+test_snap_classic_behavior
+test_source_file_update
+
+grep -Fxq 'cask "docker-desktop"' "$root/packages/macos/Brewfile.desktop"
+for cask in docker-desktop font-hackgen visual-studio-code wezterm; do
+  grep -Fxq "cask \"$cask\"" "$root/packages/macos/Brewfile.desktop"
+  ! grep -Fxq "cask \"$cask\"" "$root/packages/macos/Brewfile.personal"
+done
+for cask in antigravity bitwarden discord nextcloud slack vivaldi; do
+  grep -Fxq "cask \"$cask\"" "$root/packages/macos/Brewfile.personal"
+  ! grep -Fxq "cask \"$cask\"" "$root/packages/macos/Brewfile.desktop"
+done
 grep -Fq 'export MISE_SYSTEM_CONFIG_DIR="$HOME/.config/mise-managed"' \
   "$root/scripts/bootstrap-linux.sh"
 grep -Fq 'export MISE_CONFIG_DIR="$HOME/.config/mise"' \

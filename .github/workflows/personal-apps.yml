@@ -1,0 +1,44 @@
+name: personal-apps
+
+on:
+  workflow_dispatch:
+
+env:
+  GITHUB_TOKEN: ${{ github.token }}
+
+jobs:
+  ubuntu:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bootstrap desktop with personal apps
+        run: |
+          ./scripts/bootstrap-linux.sh \
+            --profile host \
+            --desktop \
+            --personal-apps
+
+      - name: Smoke test personal apps
+        run: |
+          snap list bitwarden
+          snap list discord
+          snap list slack
+          snap list vivaldi
+          dpkg-query -W nextcloud-desktop
+          dpkg-query -W antigravity
+
+  macos:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Bootstrap desktop with personal apps
+        run: |
+          ./scripts/bootstrap-macos.sh \
+            --profile host \
+            --desktop \
+            --personal-apps
+
+      - name: Check personal bundle
+        run: brew bundle check --file packages/macos/Brewfile.personal

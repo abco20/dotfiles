@@ -3,6 +3,8 @@ $Root = Split-Path -Parent $PSScriptRoot
 Get-Content "$Root/packages/windows/common.json" -Raw | ConvertFrom-Json | Out-Null
 $DesktopManifest = Get-Content "$Root/packages/windows/desktop.json" -Raw |
     ConvertFrom-Json
+$PersonalManifest = Get-Content "$Root/packages/windows/personal.json" -Raw |
+    ConvertFrom-Json
 $DesktopPackageIds = @(
     $DesktopManifest.Sources |
         ForEach-Object { $_.Packages.PackageIdentifier }
@@ -15,6 +17,26 @@ $RequiredDesktopPackages = @(
 foreach ($PackageId in $RequiredDesktopPackages) {
     if ($DesktopPackageIds -notcontains $PackageId) {
         throw "Windows desktop manifest is missing $PackageId."
+    }
+}
+$PersonalPackageIds = @(
+    $PersonalManifest.Sources |
+        ForEach-Object { $_.Packages.PackageIdentifier }
+)
+$RequiredPersonalPackages = @(
+    'Bitwarden.Bitwarden',
+    'Discord.Discord',
+    'Google.Antigravity',
+    'Nextcloud.NextcloudDesktop',
+    'SlackTechnologies.Slack',
+    'Vivaldi.Vivaldi'
+)
+foreach ($PackageId in $RequiredPersonalPackages) {
+    if ($PersonalPackageIds -notcontains $PackageId) {
+        throw "Windows personal manifest is missing $PackageId."
+    }
+    if ($DesktopPackageIds -contains $PackageId) {
+        throw "Windows desktop manifest contains personal package $PackageId."
     }
 }
 
