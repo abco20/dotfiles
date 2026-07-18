@@ -27,12 +27,29 @@ export MISE_CONFIG_DIR="$HOME/.config/mise"
 run() { if $dry_run; then printf '+ %q ' "$@"; printf '\n'; else "$@"; fi; }
 
 command -v brew >/dev/null 2>&1 || { echo "Homebrew must be installed first" >&2; exit 1; }
+echo "Installing Homebrew common bundle"
 run brew bundle --file "$root/packages/macos/Brewfile.common"
-[[ $profile == host ]] && run brew bundle --file "$root/packages/macos/Brewfile.host"
-[[ $desktop == true ]] && run brew bundle --file "$root/packages/macos/Brewfile.desktop"
-[[ $desktop == true && $skip_manual_desktop == false ]] && \
-  run brew bundle --file "$root/packages/macos/Brewfile.desktop-manual"
-[[ $personal_apps == true ]] && run brew bundle --file "$root/packages/macos/Brewfile.personal"
+if [[ $profile == host ]]; then
+  echo "Installing Homebrew host bundle"
+  run brew bundle \
+    --file "$root/packages/macos/Brewfile.host"
+fi
+if [[ $desktop == true ]]; then
+  echo "Installing Homebrew desktop bundle"
+  run brew bundle \
+    --file "$root/packages/macos/Brewfile.desktop"
+fi
+if [[ $desktop == true &&
+      $skip_manual_desktop == false ]]; then
+  echo "Installing Homebrew manual desktop bundle"
+  run brew bundle \
+    --file "$root/packages/macos/Brewfile.desktop-manual"
+fi
+if [[ $personal_apps == true ]]; then
+  echo "Installing Homebrew personal bundle"
+  run brew bundle \
+    --file "$root/packages/macos/Brewfile.personal"
+fi
 $dry_run && exit 0
 
 if ! brew list --formula mise >/dev/null 2>&1; then
@@ -50,6 +67,9 @@ command -v mise >/dev/null 2>&1 || {
 
 export DOTFILES_PROFILE=$profile DOTFILES_DESKTOP=$desktop DOTFILES_ROBOTICS=false DOTFILES_ROS_DISTRO=
 chezmoi_args=(init --apply --force --source "$root")
+echo "Applying chezmoi configuration"
 mise x aqua:twpayne/chezmoi@latest -- chezmoi "${chezmoi_args[@]}"
+echo "Installing mise tools"
 mise install
+echo "Checking zsh configuration"
 zsh -dfc 'source "$HOME/.zshrc"'

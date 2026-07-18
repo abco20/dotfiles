@@ -180,12 +180,15 @@ test_source_file_update
 
 grep -Fxq 'cask "docker-desktop"' \
   "$root/packages/macos/Brewfile.desktop-manual"
-for cask in font-hackgen-nerd visual-studio-code wezterm; do
+for cask in visual-studio-code wezterm; do
   grep -Fxq "cask \"$cask\"" "$root/packages/macos/Brewfile.desktop"
   ! grep -Fxq "cask \"$cask\"" "$root/packages/macos/Brewfile.personal"
 done
+for cask in docker-desktop font-hackgen-nerd; do
+  grep -Fxq "cask \"$cask\"" "$root/packages/macos/Brewfile.desktop-manual"
+done
 ! grep -Fq 'docker-desktop' "$root/packages/macos/Brewfile.desktop"
-! grep -Fq 'font-hackgen"' "$root/packages/macos/Brewfile.desktop"
+! grep -Fq 'font-hackgen-nerd' "$root/packages/macos/Brewfile.desktop"
 for cask in antigravity bitwarden discord nextcloud slack vivaldi; do
   grep -Fxq "cask \"$cask\"" "$root/packages/macos/Brewfile.personal"
   ! grep -Fxq "cask \"$cask\"" "$root/packages/macos/Brewfile.desktop"

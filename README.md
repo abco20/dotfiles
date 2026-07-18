@@ -66,8 +66,11 @@ desktop coreに加えて以下を導入します。
 personal appsはPR必須のfull bootstrapでは実インストールせず、manifestの静的検証を行います。
 
 macOSでも`--personal-apps`を指定すると同じpersonal appsを追加できます。
-Docker Desktopは`packages/macos/Brewfile.desktop-manual`で管理し、通常のdesktop bootstrapでは導入します。
-hosted CIでは`--skip-manual-desktop`を指定して実インストールを除外します。
+macOSの通常のdesktop bootstrapでは、`Brewfile.desktop-manual`から
+Docker DesktopとHackGen Nerd Fontも導入します。
+
+GitHub-hosted CIでは`--skip-manual-desktop`を指定し、
+これらの実機向けパッケージを除外します。
 
 ### Windows desktop
 

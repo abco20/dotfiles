@@ -166,36 +166,63 @@ jobs:
         shell: pwsh
         run: ./scripts/bootstrap-windows.ps1 -Profile Host
 
-      - name: Smoke test
+      - name: Check Windows profile
         shell: pwsh
         run: |
           if (-not (Test-Path $PROFILE.CurrentUserAllHosts)) {
               throw "PowerShell profile was not created: $($PROFILE.CurrentUserAllHosts)"
           }
+
           . $PROFILE.CurrentUserAllHosts
-          $Expected = Join-Path $HOME '.config/mise-managed'
-          if ($env:MISE_SYSTEM_CONFIG_DIR -ne $Expected) {
+
+          $ExpectedSystem = Join-Path $HOME '.config/mise-managed'
+          if ($env:MISE_SYSTEM_CONFIG_DIR -ne $ExpectedSystem) {
               throw 'PowerShell profile did not preserve mise system config.'
           }
+
           $ExpectedUser = Join-Path $HOME '.config/mise'
           if ($env:MISE_CONFIG_DIR -ne $ExpectedUser) {
               throw 'PowerShell profile did not preserve mise user config.'
           }
+
           if (Get-Command sheldon -ErrorAction SilentlyContinue) {
               throw 'Sheldon must not be installed on Windows.'
           }
+
+      - name: Check Windows mise
+        shell: pwsh
+        run: |
+          . $PROFILE.CurrentUserAllHosts
+
           mise --version
           mise config ls
           mise ls
+
+      - name: Check Windows tools
+        shell: pwsh
+        run: |
+          . $PROFILE.CurrentUserAllHosts
+
           mise exec -- chezmoi --version
           mise exec -- starship --version
           mise exec -- rg --version
-          if ((Get-Alias ls).Definition -ne 'lsd') {
+          mise exec -- lsd --version
+          mise exec -- bat --version
+          mise exec -- nvim --version
+
+      - name: Check Windows aliases
+        shell: pwsh
+        run: |
+          . $PROFILE.CurrentUserAllHosts
+
+          if ((Get-Alias ls -ErrorAction Stop).Definition -ne 'lsd') {
               throw 'ls alias is incorrect.'
           }
-          if ((Get-Alias cat).Definition -ne 'bat') {
+
+          if ((Get-Alias cat -ErrorAction Stop).Definition -ne 'bat') {
               throw 'cat alias is incorrect.'
           }
-          if ((Get-Alias vi).Definition -ne 'nvim') {
+
+          if ((Get-Alias vi -ErrorAction Stop).Definition -ne 'nvim') {
               throw 'vi alias is incorrect.'
           }

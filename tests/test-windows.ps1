@@ -57,6 +57,22 @@ Assert-PowerShellSyntax "$Root/scripts/install-hackgen-font.ps1"
 Assert-PowerShellSyntax "$Root/home/private_dot_config/powershell/main.ps1"
 Assert-PowerShellSyntax "$Root/home/run_once_after_10-migrate-mise-lock.ps1"
 
+$PowerShellConfig =
+    Get-Content "$Root/home/private_dot_config/powershell/main.ps1" -Raw
+foreach ($ExpectedAlias in @(
+    'Set-Alias ls lsd -Force',
+    'Set-Alias cat bat -Force',
+    'Set-Alias vi nvim -Force'
+)) {
+    if ($PowerShellConfig -notmatch [regex]::Escape($ExpectedAlias)) {
+        throw "PowerShell config is missing alias: $ExpectedAlias"
+    }
+}
+if ($PowerShellConfig -match
+    'Get-Command\s+(lsd|bat|nvim)\s+-ErrorAction') {
+    throw 'mise-managed PowerShell aliases must not depend on Get-Command.'
+}
+
 if (-not (Test-Path "$Root/home/private_dot_config/mise-managed/mise.lock")) {
     throw 'Shared mise lockfile is missing.'
 }
