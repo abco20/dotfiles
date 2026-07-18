@@ -90,7 +90,11 @@ jobs:
       - name: Smoke test
         shell: pwsh
         run: |
-          . $PROFILE.CurrentUserAllHosts
+          $Documents = [Environment]::GetFolderPath('MyDocuments')
+          if ([string]::IsNullOrWhiteSpace($Documents)) {
+              $Documents = Join-Path $HOME 'Documents'
+          }
+          . (Join-Path $Documents 'PowerShell/profile.ps1')
           $Expected = Join-Path $HOME '.config/mise-managed'
           if ($env:MISE_SYSTEM_CONFIG_DIR -ne $Expected) {
               throw 'PowerShell profile did not preserve mise system config.'

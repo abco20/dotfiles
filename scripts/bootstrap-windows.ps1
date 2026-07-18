@@ -64,5 +64,9 @@ if ($LASTEXITCODE -ne 0) {
     throw "mise install failed with exit code $LASTEXITCODE."
 }
 
-& "$PSScriptRoot/update-powershell-profile.ps1" `
-    -ProfilePath $PROFILE.CurrentUserAllHosts
+$Documents = [Environment]::GetFolderPath('MyDocuments')
+if ([string]::IsNullOrWhiteSpace($Documents)) {
+    $Documents = Join-Path $HOME 'Documents'
+}
+$ProfilePath = Join-Path $Documents 'PowerShell/profile.ps1'
+& "$PSScriptRoot/update-powershell-profile.ps1" -ProfilePath $ProfilePath

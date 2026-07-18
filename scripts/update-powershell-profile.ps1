@@ -1,6 +1,6 @@
 [CmdletBinding()]
 param(
-    [string]$ProfilePath = $PROFILE.CurrentUserAllHosts,
+    [string]$ProfilePath,
     [string]$ManagedMain = (Join-Path $HOME '.config/powershell/main.ps1'),
     [string]$ManagedLocal = (Join-Path $HOME '.config/powershell/local.ps1')
 )
@@ -9,6 +9,14 @@ $ErrorActionPreference = 'Stop'
 
 if ($PSVersionTable.PSVersion.Major -lt 7) {
     throw 'This script requires PowerShell 7 or later.'
+}
+
+if ([string]::IsNullOrWhiteSpace($ProfilePath)) {
+    $Documents = [Environment]::GetFolderPath('MyDocuments')
+    if ([string]::IsNullOrWhiteSpace($Documents)) {
+        $Documents = Join-Path $HOME 'Documents'
+    }
+    $ProfilePath = Join-Path $Documents 'PowerShell/profile.ps1'
 }
 
 $Start = '# >>> abco20 dotfiles >>>'

@@ -36,7 +36,8 @@ if ($Ignore -notmatch '\.config/sheldon' -or
 
 $WindowsBootstrap = Get-Content "$Root/scripts/bootstrap-windows.ps1" -Raw
 if ($WindowsBootstrap -notmatch 'Add-GitInclude' -or
-    $WindowsBootstrap -notmatch '-ProfilePath \$PROFILE\.CurrentUserAllHosts') {
+    $WindowsBootstrap -notmatch "GetFolderPath\('MyDocuments'\)" -or
+    $WindowsBootstrap -notmatch '-ProfilePath \$ProfilePath') {
     throw 'Windows bootstrap must configure Git includes and pass its profile path.'
 }
 
