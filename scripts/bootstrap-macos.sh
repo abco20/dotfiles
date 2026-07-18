@@ -25,6 +25,9 @@ run brew bundle --file "$root/packages/macos/Brewfile.common"
 [[ $desktop == true ]] && run brew bundle --file "$root/packages/macos/Brewfile.desktop"
 $dry_run && exit 0
 
+curl https://mise.run | sh
+export PATH="$HOME/.local/bin:$PATH"
+
 export DOTFILES_PROFILE=$profile DOTFILES_DESKTOP=$desktop DOTFILES_ROBOTICS=false DOTFILES_ROS_DISTRO=
 chezmoi_args=(init --apply --force --source "$root")
 mise x aqua:twpayne/chezmoi@latest -- chezmoi "${chezmoi_args[@]}"
