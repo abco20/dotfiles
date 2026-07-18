@@ -153,7 +153,13 @@ git_entry_second=$(sha256sum "$HOME/.gitconfig")
 grep -q '^export APP_ADDED=1$' "$HOME/.zshrc"
 grep -q '^deno = "latest"$' "$HOME/.config/mise/config.toml"
 grep -q '^# keep local lock content$' "$HOME/.config/mise/mise.lock"
-[[ ! -e $HOME/.config/mise/conf.d ]]
+for legacy_file in \
+  00-settings.toml \
+  10-common.toml \
+  20-dev-cli.toml \
+  30-host-languages.toml; do
+  [[ ! -e $HOME/.config/mise/conf.d/$legacy_file ]]
+done
 ! grep -q 'aqua:starship/starship' "$HOME/.config/mise/mise.lock"
 grep -q '^    name = Existing User$' "$HOME/.config/git/config"
 grep -q '^    email = existing@example.com$' "$HOME/.gitconfig"
