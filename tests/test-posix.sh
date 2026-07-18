@@ -8,6 +8,10 @@ test_home=$(mktemp -d)
 trap 'rm -rf "$test_home"' EXIT
 
 export HOME=$test_home
+export XDG_CONFIG_HOME="$HOME/.config"
+export XDG_DATA_HOME="$HOME/.local/share"
+export XDG_CACHE_HOME="$HOME/.cache"
+export MISE_SYSTEM_CONFIG_DIR="$XDG_CONFIG_HOME/mise-managed"
 export DOTFILES_PROFILE=${DOTFILES_PROFILE:-container}
 export DOTFILES_DESKTOP=${DOTFILES_DESKTOP:-false}
 export DOTFILES_ROBOTICS=${DOTFILES_ROBOTICS:-false}
