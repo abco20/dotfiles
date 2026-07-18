@@ -1,4 +1,6 @@
 {{- if eq .chezmoi.os "windows" }}
+.gitconfig
+.config/git/config
 .zshrc
 .config/zsh
 .config/sheldon

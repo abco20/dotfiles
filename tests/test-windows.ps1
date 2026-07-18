@@ -27,6 +27,19 @@ if (-not (Test-Path "$Root/home/private_dot_config/mise/create_config.toml") -or
     throw 'Machine-local mise create files are missing.'
 }
 
+$Ignore = Get-Content "$Root/home/.chezmoiignore" -Raw
+if ($Ignore -notmatch '\.config/sheldon' -or
+    $Ignore -notmatch '\.gitconfig' -or
+    $Ignore -notmatch '\.config/git/config') {
+    throw 'Windows chezmoi ignore is missing a platform-specific exclusion.'
+}
+
+$WindowsBootstrap = Get-Content "$Root/scripts/bootstrap-windows.ps1" -Raw
+if ($WindowsBootstrap -notmatch 'Add-GitInclude' -or
+    $WindowsBootstrap -notmatch '-ProfilePath \$PROFILE\.CurrentUserAllHosts') {
+    throw 'Windows bootstrap must configure Git includes and pass its profile path.'
+}
+
 if ($PSVersionTable.PSVersion.Major -lt 7) {
     throw 'CI must use PowerShell 7 or later.'
 }

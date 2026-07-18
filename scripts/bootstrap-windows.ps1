@@ -20,6 +20,19 @@ function Install-WingetFile([string]$Path) {
     winget @WingetArgs --import-file $Path
 }
 
+function Add-GitInclude([string]$Config, [string]$Include) {
+    $Directory = Split-Path -Parent $Config
+    New-Item -ItemType Directory -Force -Path $Directory | Out-Null
+
+    $Existing = @(git config --file $Config --get-all include.path 2>$null)
+    if ($Existing -notcontains $Include) {
+        git config --file $Config --add include.path $Include
+        if ($LASTEXITCODE -ne 0) {
+            throw "Failed to add $Include to $Config."
+        }
+    }
+}
+
 Install-WingetFile "$Root/packages/windows/common.json"
 if ($Desktop) { Install-WingetFile "$Root/packages/windows/desktop.json" }
 if ($DryRun) { return }
@@ -32,9 +45,24 @@ $env:MISE_SYSTEM_CONFIG_DIR =
     Join-Path $HOME '.config/mise-managed'
 
 mise x aqua:twpayne/chezmoi@latest -- chezmoi init --apply --force --source $Root
+if ($LASTEXITCODE -ne 0) {
+    throw "chezmoi apply failed with exit code $LASTEXITCODE."
+}
+
+Add-GitInclude `
+    (Join-Path $HOME '.gitconfig') `
+    '~/.config/git/config'
+Add-GitInclude `
+    (Join-Path $HOME '.config/git/config') `
+    '~/.config/git/config.dotfiles'
+Add-GitInclude `
+    (Join-Path $HOME '.config/git/config') `
+    '~/.config/git/config.local'
+
 mise install
 if ($LASTEXITCODE -ne 0) {
     throw "mise install failed with exit code $LASTEXITCODE."
 }
 
-& "$PSScriptRoot/update-powershell-profile.ps1"
+& "$PSScriptRoot/update-powershell-profile.ps1" `
+    -ProfilePath $PROFILE.CurrentUserAllHosts
