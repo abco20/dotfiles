@@ -76,10 +76,7 @@ export DOTFILES_DESKTOP=$desktop
 export DOTFILES_ROBOTICS=$robotics
 export DOTFILES_ROS_DISTRO=${DOTFILES_ROS_DISTRO:-}
 
-chezmoi_args=(init --apply --source "$root")
-if [[ $profile == host ]]; then
-  chezmoi_args+=(--less-interactive)
-fi
+chezmoi_args=(init --apply --force --source "$root")
 mise x aqua:twpayne/chezmoi@latest -- chezmoi "${chezmoi_args[@]}"
 
 mise install

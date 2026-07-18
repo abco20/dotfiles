@@ -158,4 +158,5 @@ function Test-MiseLockMigrationFailure {
 
 Test-PowerShellProfileUpdate
 Test-MiseLockMigrationFailure
+$global:LASTEXITCODE = 0
 Write-Host 'windows tests passed'

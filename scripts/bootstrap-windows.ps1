@@ -31,7 +31,7 @@ $env:DOTFILES_ROS_DISTRO = ''
 $env:MISE_SYSTEM_CONFIG_DIR =
     Join-Path $HOME '.config/mise-managed'
 
-mise x aqua:twpayne/chezmoi@latest -- chezmoi init --apply --less-interactive --source $Root
+mise x aqua:twpayne/chezmoi@latest -- chezmoi init --apply --force --source $Root
 mise install
 if ($LASTEXITCODE -ne 0) {
     throw "mise install failed with exit code $LASTEXITCODE."

@@ -26,10 +26,7 @@ run brew bundle --file "$root/packages/macos/Brewfile.common"
 $dry_run && exit 0
 
 export DOTFILES_PROFILE=$profile DOTFILES_DESKTOP=$desktop DOTFILES_ROBOTICS=false DOTFILES_ROS_DISTRO=
-chezmoi_args=(init --apply --source "$root")
-if [[ $profile == host ]]; then
-  chezmoi_args+=(--less-interactive)
-fi
+chezmoi_args=(init --apply --force --source "$root")
 mise x aqua:twpayne/chezmoi@latest -- chezmoi "${chezmoi_args[@]}"
 mise install
 zsh -dfc 'source "$HOME/.zshrc"'

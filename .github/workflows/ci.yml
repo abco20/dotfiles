@@ -31,7 +31,7 @@ jobs:
         run: |
           export MISE_SYSTEM_CONFIG_DIR="$HOME/.config/mise-managed"
           mise x aqua:twpayne/chezmoi@latest -- \
-            chezmoi init --apply --source "$GITHUB_WORKSPACE"
+            chezmoi init --apply --force --source "$GITHUB_WORKSPACE"
 
       - name: Install mise tools
         run: |
