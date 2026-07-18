@@ -1,0 +1,18 @@
+{{- $distro := .rosDistro -}}
+{{- if eq $distro "" -}}
+  {{- if eq .chezmoi.osRelease.versionID "22.04" -}}
+    {{- $distro = "humble" -}}
+  {{- else if eq .chezmoi.osRelease.versionID "24.04" -}}
+    {{- $distro = "jazzy" -}}
+  {{- end -}}
+{{- end }}
+if [[ -r "/opt/ros/{{ $distro }}/setup.zsh" ]]; then
+  source "/opt/ros/{{ $distro }}/setup.zsh"
+fi
+[[ -r /usr/share/colcon_cd/function/colcon_cd.sh ]] && source /usr/share/colcon_cd/function/colcon_cd.sh
+
+(( $+commands[register-python-argcomplete] )) && eval "$(register-python-argcomplete ros2 2>/dev/null)"
+(( $+commands[register-python-argcomplete] )) && eval "$(register-python-argcomplete colcon 2>/dev/null)"
+export RCUTILS_COLORIZED_OUTPUT=1
+export RMW_IMPLEMENTATION=rmw_cyclonedds_cpp
+export CYCLONEDDS_URI="file://$HOME/.config/cyclonedds.xml"

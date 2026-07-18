@@ -1,0 +1,5 @@
+min_version = "2025.12.0"
+
+[settings]
+lockfile = false
+lockfile_platforms = ["linux-x64", "macos-arm64", "windows-x64"]

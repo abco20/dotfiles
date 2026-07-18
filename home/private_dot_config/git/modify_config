@@ -1,0 +1,20 @@
+#!/bin/sh
+set -eu
+
+start='# >>> abco20 dotfiles >>>'
+end='# <<< abco20 dotfiles <<<'
+
+awk -v start="$start" -v end="$end" '
+  $0 == start { managed = 1; next }
+  $0 == end { managed = 0; next }
+  !managed { print }
+'
+
+cat <<'EOF'
+# >>> abco20 dotfiles >>>
+[include]
+    path = ~/.config/git/config.dotfiles
+[include]
+    path = ~/.config/git/config.local
+# <<< abco20 dotfiles <<<
+EOF

@@ -1,0 +1,33 @@
+#!/bin/sh
+set -eu
+
+start='# >>> abco20 dotfiles >>>'
+end='# <<< abco20 dotfiles <<<'
+
+awk -v start="$start" -v end="$end" '
+  $0 == start { managed = 1; next }
+  $0 == end { managed = 0; next }
+  managed { next }
+
+  $0 == "[include]" { include_header = $0; next }
+  include_header != "" {
+    if ($0 ~ /^[[:space:]]*path[[:space:]]*=[[:space:]]*~\/.config\/git\/\.gitconfig[[:space:]]*$/) {
+      include_header = ""
+      next
+    }
+    print include_header
+    include_header = ""
+  }
+  { print }
+
+  END {
+    if (include_header != "") print include_header
+  }
+'
+
+cat <<'EOF'
+# >>> abco20 dotfiles >>>
+[include]
+    path = ~/.config/git/config
+# <<< abco20 dotfiles <<<
+EOF

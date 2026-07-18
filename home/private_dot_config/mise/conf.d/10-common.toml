@@ -1,0 +1,6 @@
+[tools]
+"aqua:twpayne/chezmoi" = "latest"
+"aqua:starship/starship" = "latest"
+"aqua:rossmacarthur/sheldon" = "latest"
+"aqua:BurntSushi/ripgrep" = "latest"
+"aqua:junegunn/fzf" = "latest"

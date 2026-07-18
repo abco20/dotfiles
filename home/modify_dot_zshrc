@@ -1,0 +1,19 @@
+#!/bin/sh
+set -eu
+
+start='# >>> abco20 dotfiles >>>'
+end='# <<< abco20 dotfiles <<<'
+
+awk -v start="$start" -v end="$end" '
+  $0 == start { managed = 1; next }
+  $0 == end { managed = 0; next }
+  !managed { print }
+'
+
+cat <<'EOF'
+# >>> abco20 dotfiles >>>
+[[ -r "$HOME/.config/zsh/main.zsh" ]] && source "$HOME/.config/zsh/main.zsh"
+[[ -r "$HOME/.config/zsh/local.zsh" ]] && source "$HOME/.config/zsh/local.zsh"
+true
+# <<< abco20 dotfiles <<<
+EOF

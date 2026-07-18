@@ -1,0 +1,7 @@
+[tools]
+"aqua:lsd-rs/lsd" = "latest"
+"aqua:sharkdp/bat" = "latest"
+"aqua:dandavison/delta" = "latest"
+"aqua:jesseduffield/lazygit" = "latest"
+"aqua:sharkdp/fd" = "latest"
+"aqua:neovim/neovim" = "latest"

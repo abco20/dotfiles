@@ -1,0 +1,29 @@
+name: full-bootstrap
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: "23 18 * * 6"
+
+jobs:
+  ubuntu-host:
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, ubuntu-24.04]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./scripts/bootstrap-linux.sh --profile host
+
+  macos-host:
+    runs-on: macos-15
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./scripts/bootstrap-macos.sh --profile host --desktop
+
+  windows-host:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v4
+      - shell: pwsh
+        run: ./scripts/bootstrap-windows.ps1 -Profile Host -Desktop

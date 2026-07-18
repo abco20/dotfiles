@@ -1,0 +1,38 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+
+jobs:
+  ubuntu:
+    strategy:
+      matrix:
+        os: [ubuntu-22.04, ubuntu-24.04]
+        profile: [container, host]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install mise and zsh
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y extrepo zsh
+          sudo extrepo enable mise
+          sudo apt-get update
+          sudo apt-get install -y mise
+      - name: Render and test
+        env:
+          DOTFILES_PROFILE: ${{ matrix.profile }}
+          DOTFILES_DESKTOP: "false"
+          DOTFILES_ROBOTICS: "false"
+        run: |
+          mise x aqua:twpayne/chezmoi@latest -- chezmoi init --apply --source "$GITHUB_WORKSPACE"
+          mise install --locked
+          mise exec -- "$GITHUB_WORKSPACE/tests/test-posix.sh"
+
+  windows:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v4
+      - shell: pwsh
+        run: ./tests/test-windows.ps1
