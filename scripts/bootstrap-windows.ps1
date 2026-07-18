@@ -1,7 +1,8 @@
 [CmdletBinding()]
 param(
+    [Alias('Profile')]
     [ValidateSet('Host')]
-    [string]$Profile = 'Host',
+    [string]$DotfilesProfile = 'Host',
     [switch]$Desktop,
     [switch]$DryRun
 )

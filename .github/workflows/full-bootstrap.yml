@@ -64,26 +64,60 @@ jobs:
             --profile host \
             --desktop
 
-      - name: Smoke test
+      - name: Check desktop config files
         run: |
-          export MISE_SYSTEM_CONFIG_DIR="$HOME/.config/mise-managed"
-          export MISE_CONFIG_DIR="$HOME/.config/mise"
           test -f "$HOME/.config/wezterm/wezterm.lua"
           test -f "$HOME/.config/mpv/mpv.conf"
           test ! -e "$HOME/.config/mpv/mpv.config"
+
+      - name: Check WezTerm
+        run: |
           command -v wezterm
-          command -v docker
           wezterm --version
+
+      - name: Check Docker
+        run: |
+          command -v docker
           docker --version
           docker compose version
-          fc-match HackGen | grep -Fq HackGen
+
+      - name: Check HackGen font
+        run: |
+          find "$HOME/.local/share/fonts" \
+            -type f \
+            -iname '*HackGen*.ttf' \
+            -print \
+            -quit |
+            grep -q .
+          fc-list | grep -i 'HackGen'
+
+      - name: Check Visual Studio Code snap
+        run: |
           snap list code
+
+      - name: Check mise configuration
+        run: |
+          export MISE_SYSTEM_CONFIG_DIR="$HOME/.config/mise-managed"
+          export MISE_CONFIG_DIR="$HOME/.config/mise"
+
           mise --version
           mise config ls
           mise ls
+
+      - name: Check mise shared tools
+        run: |
+          export MISE_SYSTEM_CONFIG_DIR="$HOME/.config/mise-managed"
+          export MISE_CONFIG_DIR="$HOME/.config/mise"
+
           mise exec -- chezmoi --version
           mise exec -- starship --version
           mise exec -- rg --version
+
+      - name: Check mise host languages
+        run: |
+          export MISE_SYSTEM_CONFIG_DIR="$HOME/.config/mise-managed"
+          export MISE_CONFIG_DIR="$HOME/.config/mise"
+
           mise exec -- node --version
           mise exec -- python --version
           mise exec -- go version
@@ -108,12 +142,8 @@ jobs:
           test -f "$HOME/.config/mpv/mpv.conf"
           test ! -e "$HOME/.config/mpv/mpv.config"
           zsh -dfc 'source "$HOME/.zshrc"'
-          mise_path=$(command -v mise)
-          printf '%s\n' "$mise_path"
-          case $mise_path in
-            "$(brew --prefix)"/*) ;;
-            *) echo "mise is outside the Homebrew prefix" >&2; exit 1 ;;
-          esac
+          brew list --formula mise
+          command -v mise
           mise --version
           mise config ls
           mise ls

@@ -35,14 +35,18 @@ run brew bundle --file "$root/packages/macos/Brewfile.common"
 [[ $personal_apps == true ]] && run brew bundle --file "$root/packages/macos/Brewfile.personal"
 $dry_run && exit 0
 
-command -v mise >/dev/null 2>&1 || {
+if ! brew list --formula mise >/dev/null 2>&1; then
   echo "mise was not installed by Homebrew" >&2
   exit 1
+fi
+
+export PATH="$(brew --prefix)/bin:$PATH"
+hash -r
+
+command -v mise >/dev/null 2>&1 || {
+  echo "mise is not available after Homebrew installation" >&2
+  exit 1
 }
-case $(command -v mise) in
-  "$(brew --prefix)"/*) ;;
-  *) echo "mise is not installed under the Homebrew prefix" >&2; exit 1 ;;
-esac
 
 export DOTFILES_PROFILE=$profile DOTFILES_DESKTOP=$desktop DOTFILES_ROBOTICS=false DOTFILES_ROS_DISTRO=
 chezmoi_args=(init --apply --force --source "$root")

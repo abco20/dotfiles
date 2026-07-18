@@ -73,6 +73,18 @@ if ($Ignore -notmatch '\.config/sheldon' -or
 }
 
 $WindowsBootstrap = Get-Content "$Root/scripts/bootstrap-windows.ps1" -Raw
+if ($WindowsBootstrap -match '\[string\]\$Profile\b') {
+    throw 'Windows bootstrap must not shadow the automatic $PROFILE variable.'
+}
+
+if ($WindowsBootstrap -notmatch "\[Alias\('Profile'\)\]") {
+    throw 'Windows bootstrap must preserve the -Profile compatibility alias.'
+}
+
+if ($WindowsBootstrap -notmatch '\[string\]\$DotfilesProfile\b') {
+    throw 'Windows bootstrap must use DotfilesProfile as its parameter name.'
+}
+
 if ($WindowsBootstrap -notmatch 'Add-GitInclude' -or
     $WindowsBootstrap -notmatch '\$PROFILE\.CurrentUserAllHosts' -or
     $WindowsBootstrap -notmatch 'install-hackgen-font\.ps1' -or
