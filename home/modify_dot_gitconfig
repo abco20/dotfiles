@@ -3,31 +3,55 @@ set -eu
 
 start='# >>> abco20 dotfiles >>>'
 end='# <<< abco20 dotfiles <<<'
+input=$(mktemp)
+output=$(mktemp)
+trap 'rm -f "$input" "$output"' EXIT HUP INT TERM
+cat > "$input"
 
 awk -v start="$start" -v end="$end" '
-  $0 == start { managed = 1; next }
-  $0 == end { managed = 0; next }
-  managed { next }
-
-  $0 == "[include]" { include_header = $0; next }
-  include_header != "" {
-    if ($0 ~ /^[[:space:]]*path[[:space:]]*=[[:space:]]*~\/.config\/git\/\.gitconfig[[:space:]]*$/) {
-      include_header = ""
-      next
+  $0 == start {
+    starts++
+    if (starts > 1) {
+      print "multiple or nested start markers" > "/dev/stderr"
+      invalid = 1
     }
-    print include_header
-    include_header = ""
+    if (ends > 0) {
+      print "start marker appears after end marker" > "/dev/stderr"
+      invalid = 1
+    }
+    managed = 1
+    next
   }
+  $0 == end {
+    ends++
+    if (ends > 1) {
+      print "multiple end markers" > "/dev/stderr"
+      invalid = 1
+    }
+    if (!managed) {
+      print "end marker appears without a start marker" > "/dev/stderr"
+      invalid = 1
+    }
+    managed = 0
+    next
+  }
+  managed { next }
+  $0 ~ /^[[:space:]]*path[[:space:]]*=[[:space:]]*~\/.config\/git\/\.gitconfig[[:space:]]*$/ { next }
   { print }
-
   END {
-    if (include_header != "") print include_header
+    if (starts != ends) {
+      print "unmatched managed block marker" > "/dev/stderr"
+      invalid = 1
+    }
+    if (invalid) exit 1
   }
-'
+' "$input" > "$output"
 
-cat <<'EOF'
+cat >> "$output" <<'EOF'
 # >>> abco20 dotfiles >>>
 [include]
     path = ~/.config/git/config
 # <<< abco20 dotfiles <<<
 EOF
+
+cat "$output"

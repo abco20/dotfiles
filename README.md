@@ -21,4 +21,5 @@
 ./scripts/bootstrap-windows.ps1 -Profile Host -Desktop
 ```
 
-適用内容だけ確認する場合は、Unixでは`--dry-run`、Windowsでは`-DryRun`を付けます。
+`--dry-run` / `-DryRun`は、OSパッケージのインストールコマンドを表示します。
+chezmoiとmiseの完全な適用プレビューではありません。

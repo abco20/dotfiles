@@ -7,6 +7,11 @@ param(
 )
 
 $ErrorActionPreference = 'Stop'
+
+if ($PSVersionTable.PSVersion.Major -lt 7) {
+    throw 'This script requires PowerShell 7 or later.'
+}
+
 $Root = Split-Path -Parent $PSScriptRoot
 $WingetArgs = @('import', '--accept-package-agreements', '--accept-source-agreements', '--disable-interactivity')
 
@@ -23,9 +28,10 @@ $env:DOTFILES_PROFILE = 'host'
 $env:DOTFILES_DESKTOP = $Desktop.ToString().ToLowerInvariant()
 $env:DOTFILES_ROBOTICS = 'false'
 $env:DOTFILES_ROS_DISTRO = ''
+$env:MISE_SYSTEM_CONFIG_DIR =
+    Join-Path $HOME '.config/mise-managed'
 
 mise x aqua:twpayne/chezmoi@latest -- chezmoi init --apply --less-interactive --source $Root
-$env:MISE_LOCKFILE = 'true'
 mise install --locked
 
 $ManagedMain = Join-Path $HOME '.config/powershell/main.ps1'

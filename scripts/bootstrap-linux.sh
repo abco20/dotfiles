@@ -31,6 +31,7 @@ if [[ $profile == container && ($desktop == true || $robotics == true) ]]; then
 fi
 
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+export MISE_SYSTEM_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/mise-managed"
 source /etc/os-release
 if [[ ${ID:-} != ubuntu || (${VERSION_ID:-} != 22.04 && ${VERSION_ID:-} != 24.04) ]]; then
   echo "supported Linux versions are Ubuntu 22.04 and 24.04" >&2
@@ -84,7 +85,7 @@ mise x aqua:twpayne/chezmoi@latest -- chezmoi "${chezmoi_args[@]}"
 if [[ ${DOTFILES_ALLOW_UNLOCKED:-false} == true ]]; then
   mise install
 else
-  MISE_LOCKFILE=true mise install --locked
+  mise install --locked
 fi
 
 mise exec -- chezmoi --version
@@ -93,7 +94,15 @@ zsh -dfc 'source "$HOME/.zshrc"'
 if $robotics; then
   run sudo apt-get install -y software-properties-common
   run sudo add-apt-repository -y universe
-  ros_apt_source_version=$(curl -fsSL https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest | awk -F'"' '/tag_name/ { print $4; exit }')
+  ros_apt_source_version=$(
+    curl --retry 3 --retry-all-errors -fsSL \
+      https://api.github.com/repos/ros-infrastructure/ros-apt-source/releases/latest |
+      awk -F'"' '/tag_name/ { print $4; exit }'
+  )
+  if [[ -z $ros_apt_source_version ]]; then
+    echo "failed to determine ros-apt-source release version" >&2
+    exit 1
+  fi
   ros_apt_source_deb="/tmp/ros2-apt-source_${ros_apt_source_version}.${VERSION_CODENAME}_all.deb"
   run curl -fsSL -o "$ros_apt_source_deb" "https://github.com/ros-infrastructure/ros-apt-source/releases/download/${ros_apt_source_version}/ros2-apt-source_${ros_apt_source_version}.${VERSION_CODENAME}_all.deb"
   run sudo dpkg -i "$ros_apt_source_deb"

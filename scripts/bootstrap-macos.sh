@@ -16,6 +16,7 @@ done
 [[ $profile == host || $desktop == false ]] || { echo "container profile cannot enable desktop" >&2; exit 2; }
 
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
+export MISE_SYSTEM_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/mise-managed"
 run() { if $dry_run; then printf '+ %q ' "$@"; printf '\n'; else "$@"; fi; }
 
 command -v brew >/dev/null 2>&1 || { echo "Homebrew must be installed first" >&2; exit 1; }
@@ -30,5 +31,5 @@ if [[ $profile == host ]]; then
   chezmoi_args+=(--less-interactive)
 fi
 mise x aqua:twpayne/chezmoi@latest -- chezmoi "${chezmoi_args[@]}"
-MISE_LOCKFILE=true mise install --locked
+mise install --locked
 zsh -dfc 'source "$HOME/.zshrc"'

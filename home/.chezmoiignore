@@ -1,11 +1,13 @@
 {{- if eq .chezmoi.os "windows" }}
 .zshrc
 .config/zsh
+10-migrate-mise-lock.sh
 {{- else }}
 .config/powershell
+10-migrate-mise-lock.ps1
 {{- end }}
 {{- if eq .profile "container" }}
-.config/mise/conf.d/30-host-languages.toml
+.config/mise-managed/conf.d/30-host-languages.toml
 {{- end }}
 {{- if not .desktop }}
 .config/wezterm

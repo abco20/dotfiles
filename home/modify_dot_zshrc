@@ -3,17 +3,54 @@ set -eu
 
 start='# >>> abco20 dotfiles >>>'
 end='# <<< abco20 dotfiles <<<'
+input=$(mktemp)
+output=$(mktemp)
+trap 'rm -f "$input" "$output"' EXIT HUP INT TERM
+cat > "$input"
 
 awk -v start="$start" -v end="$end" '
-  $0 == start { managed = 1; next }
-  $0 == end { managed = 0; next }
+  $0 == start {
+    starts++
+    if (starts > 1) {
+      print "multiple or nested start markers" > "/dev/stderr"
+      invalid = 1
+    }
+    if (ends > 0) {
+      print "start marker appears after end marker" > "/dev/stderr"
+      invalid = 1
+    }
+    managed = 1
+    next
+  }
+  $0 == end {
+    ends++
+    if (ends > 1) {
+      print "multiple end markers" > "/dev/stderr"
+      invalid = 1
+    }
+    if (!managed) {
+      print "end marker appears without a start marker" > "/dev/stderr"
+      invalid = 1
+    }
+    managed = 0
+    next
+  }
   !managed { print }
-'
+  END {
+    if (starts != ends) {
+      print "unmatched managed block marker" > "/dev/stderr"
+      invalid = 1
+    }
+    if (invalid) exit 1
+  }
+' "$input" > "$output"
 
-cat <<'EOF'
+cat >> "$output" <<'EOF'
 # >>> abco20 dotfiles >>>
 [[ -r "$HOME/.config/zsh/main.zsh" ]] && source "$HOME/.config/zsh/main.zsh"
 [[ -r "$HOME/.config/zsh/local.zsh" ]] && source "$HOME/.config/zsh/local.zsh"
 true
 # <<< abco20 dotfiles <<<
 EOF
+
+cat "$output"

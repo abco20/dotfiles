@@ -1,12 +1,12 @@
 {{- $distro := .rosDistro -}}
-{{- if eq $distro "" -}}
+{{- if and (eq $distro "") (eq .chezmoi.os "linux") -}}
   {{- if eq .chezmoi.osRelease.versionID "22.04" -}}
     {{- $distro = "humble" -}}
   {{- else if eq .chezmoi.osRelease.versionID "24.04" -}}
     {{- $distro = "jazzy" -}}
   {{- end -}}
 {{- end }}
-if [[ -r "/opt/ros/{{ $distro }}/setup.zsh" ]]; then
+if [[ -n "{{ $distro }}" && -r "/opt/ros/{{ $distro }}/setup.zsh" ]]; then
   source "/opt/ros/{{ $distro }}/setup.zsh"
 fi
 [[ -r /usr/share/colcon_cd/function/colcon_cd.sh ]] && source /usr/share/colcon_cd/function/colcon_cd.sh

@@ -19,11 +19,20 @@ jobs:
     runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
-      - run: ./scripts/bootstrap-macos.sh --profile host --desktop
+      - run: |
+          ./scripts/bootstrap-macos.sh --profile host --desktop
+          test -f "$HOME/.config/mpv/mpv.conf"
+          test ! -e "$HOME/.config/mpv/mpv.config"
 
   windows-host:
     runs-on: windows-2025
     steps:
       - uses: actions/checkout@v4
       - shell: pwsh
-        run: ./scripts/bootstrap-windows.ps1 -Profile Host -Desktop
+        run: |
+          ./scripts/bootstrap-windows.ps1 -Profile Host -Desktop
+          . $PROFILE.CurrentUserAllHosts
+          $Expected = Join-Path $HOME '.config/mise-managed'
+          if ($env:MISE_SYSTEM_CONFIG_DIR -ne $Expected) {
+              throw 'PowerShell profile did not preserve mise system config.'
+          }
