@@ -4,6 +4,7 @@ set -euo pipefail
 profile=host
 desktop=false
 personal_apps=false
+skip_desktop_packages=false
 skip_manual_desktop=false
 dry_run=false
 while (($#)); do
@@ -11,13 +12,15 @@ while (($#)); do
     --profile) profile=${2:?missing profile}; shift 2 ;;
     --desktop) desktop=true; shift ;;
     --personal-apps) personal_apps=true; shift ;;
+    --skip-desktop-packages) skip_desktop_packages=true; shift ;;
     --skip-manual-desktop) skip_manual_desktop=true; shift ;;
     --dry-run) dry_run=true; shift ;;
-    *) echo "usage: $0 --profile host|container [--desktop] [--personal-apps] [--skip-manual-desktop] [--dry-run]" >&2; exit 2 ;;
+    *) echo "usage: $0 --profile host|container [--desktop] [--personal-apps] [--skip-desktop-packages] [--skip-manual-desktop] [--dry-run]" >&2; exit 2 ;;
   esac
 done
 [[ $profile == host || $profile == container ]] || { echo "unsupported profile: $profile" >&2; exit 2; }
 [[ $personal_apps == false || $desktop == true ]] || { echo "--personal-apps requires --desktop" >&2; exit 2; }
+[[ $skip_desktop_packages == false || $desktop == true ]] || { echo "--skip-desktop-packages requires --desktop" >&2; exit 2; }
 [[ $skip_manual_desktop == false || $desktop == true ]] || { echo "--skip-manual-desktop requires --desktop" >&2; exit 2; }
 [[ $profile == host || ($desktop == false && $personal_apps == false) ]] || { echo "container profile cannot enable desktop or personal apps" >&2; exit 2; }
 
@@ -34,12 +37,14 @@ if [[ $profile == host ]]; then
   run brew bundle \
     --file "$root/packages/macos/Brewfile.host"
 fi
-if [[ $desktop == true ]]; then
+if [[ $desktop == true &&
+      $skip_desktop_packages == false ]]; then
   echo "Installing Homebrew desktop bundle"
   run brew bundle \
     --file "$root/packages/macos/Brewfile.desktop"
 fi
 if [[ $desktop == true &&
+      $skip_desktop_packages == false &&
       $skip_manual_desktop == false ]]; then
   echo "Installing Homebrew manual desktop bundle"
   run brew bundle \

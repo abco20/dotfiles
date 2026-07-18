@@ -128,17 +128,36 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Bootstrap host and desktop
+      - name: Validate macOS desktop casks
+        run: |
+          while IFS= read -r cask; do
+            brew info --cask "$cask" >/dev/null
+          done < <(
+            brew bundle list \
+              --file packages/macos/Brewfile.desktop \
+              --cask
+          )
+
+          while IFS= read -r cask; do
+            brew info --cask "$cask" >/dev/null
+          done < <(
+            brew bundle list \
+              --file packages/macos/Brewfile.desktop-manual \
+              --cask
+          )
+
+      - name: Bootstrap host and desktop config
         run: |
           ./scripts/bootstrap-macos.sh \
             --profile host \
             --desktop \
-            --skip-manual-desktop
+            --skip-desktop-packages
 
       - name: Smoke test
         run: |
           export MISE_SYSTEM_CONFIG_DIR="$HOME/.config/mise-managed"
           export MISE_CONFIG_DIR="$HOME/.config/mise"
+          test -f "$HOME/.config/wezterm/wezterm.lua"
           test -f "$HOME/.config/mpv/mpv.conf"
           test ! -e "$HOME/.config/mpv/mpv.config"
           zsh -dfc 'source "$HOME/.zshrc"'
@@ -164,7 +183,19 @@ jobs:
 
       - name: Bootstrap host
         shell: pwsh
-        run: ./scripts/bootstrap-windows.ps1 -Profile Host
+        run: |
+          ./scripts/bootstrap-windows.ps1 -Profile Host
+
+          $MiseCommand = Get-Command mise -ErrorAction Stop
+          $MiseDirectory = Split-Path -Parent $MiseCommand.Source
+
+          $MiseDirectory |
+            Out-File `
+              -FilePath $env:GITHUB_PATH `
+              -Encoding utf8 `
+              -Append
+
+          Write-Host "Persisted mise directory: $MiseDirectory"
 
       - name: Check Windows profile
         shell: pwsh
@@ -193,6 +224,9 @@ jobs:
         shell: pwsh
         run: |
           . $PROFILE.CurrentUserAllHosts
+
+          $MiseCommand = Get-Command mise -ErrorAction Stop
+          Write-Host "mise executable: $($MiseCommand.Source)"
 
           mise --version
           mise config ls
