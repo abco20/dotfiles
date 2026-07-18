@@ -1,7 +1,22 @@
 $ErrorActionPreference = 'Stop'
 $Root = Split-Path -Parent $PSScriptRoot
 Get-Content "$Root/packages/windows/common.json" -Raw | ConvertFrom-Json | Out-Null
-Get-Content "$Root/packages/windows/desktop.json" -Raw | ConvertFrom-Json | Out-Null
+$DesktopManifest = Get-Content "$Root/packages/windows/desktop.json" -Raw |
+    ConvertFrom-Json
+$DesktopPackageIds = @(
+    $DesktopManifest.Sources |
+        ForEach-Object { $_.Packages.PackageIdentifier }
+)
+$RequiredDesktopPackages = @(
+    'Docker.DockerDesktop',
+    'Microsoft.VisualStudioCode',
+    'wez.wezterm'
+)
+foreach ($PackageId in $RequiredDesktopPackages) {
+    if ($DesktopPackageIds -notcontains $PackageId) {
+        throw "Windows desktop manifest is missing $PackageId."
+    }
+}
 
 function Assert-PowerShellSyntax([string]$Path) {
     $Tokens = $null
@@ -40,12 +55,17 @@ if ($WindowsBootstrap -notmatch 'Add-GitInclude' -or
     $WindowsBootstrap -notmatch '-ProfilePath \$ProfilePath') {
     throw 'Windows bootstrap must configure Git includes and pass its profile path.'
 }
+$FullBootstrap = Get-Content "$Root/.github/workflows/full-bootstrap.yml" -Raw
+if ($FullBootstrap -match 'bootstrap-windows\.ps1[^\r\n]*-Desktop') {
+    throw 'Windows full bootstrap must not enable Desktop.'
+}
 
 if ($PSVersionTable.PSVersion.Major -lt 7) {
     throw 'CI must use PowerShell 7 or later.'
 }
 
 $PreviousMiseSystemConfig = $env:MISE_SYSTEM_CONFIG_DIR
+$PreviousMiseConfig = $env:MISE_CONFIG_DIR
 try {
     function global:lsd { }
     function global:bat { }
@@ -54,12 +74,16 @@ try {
     if ($env:MISE_SYSTEM_CONFIG_DIR -ne (Join-Path $HOME '.config/mise-managed')) {
         throw 'MISE_SYSTEM_CONFIG_DIR does not point to mise-managed.'
     }
+    if ($env:MISE_CONFIG_DIR -ne (Join-Path $HOME '.config/mise')) {
+        throw 'MISE_CONFIG_DIR does not point to the user mise directory.'
+    }
     if ((Get-Alias ls).Definition -ne 'lsd') { throw 'ls alias was not replaced.' }
     if ((Get-Alias cat).Definition -ne 'bat') { throw 'cat alias was not replaced.' }
     if ((Get-Alias vi).Definition -ne 'nvim') { throw 'vi alias was not replaced.' }
 }
 finally {
     $env:MISE_SYSTEM_CONFIG_DIR = $PreviousMiseSystemConfig
+    $env:MISE_CONFIG_DIR = $PreviousMiseConfig
     Remove-Item Function:\lsd, Function:\bat, Function:\nvim -ErrorAction SilentlyContinue
 }
 

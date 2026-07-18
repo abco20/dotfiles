@@ -1,5 +1,6 @@
 export LANG="${LANG:-en_US.UTF-8}"
-export MISE_SYSTEM_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/mise-managed"
+export MISE_SYSTEM_CONFIG_DIR="$HOME/.config/mise-managed"
+export MISE_CONFIG_DIR="$HOME/.config/mise"
 
 HISTFILE="${ZDOTDIR:-$HOME}/.zsh_history"
 HISTSIZE=10000

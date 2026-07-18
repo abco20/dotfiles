@@ -23,3 +23,28 @@
 
 `--dry-run` / `-DryRun`は、OSパッケージのインストールコマンドを表示します。
 chezmoiとmiseの完全な適用プレビューではありません。
+
+### Ubuntu desktop
+
+```bash
+./scripts/bootstrap-linux.sh --profile host --desktop
+```
+
+追加で以下を導入します。
+
+* WezTerm
+* Docker Engine
+* HackGen Nerd Font
+* Nextcloud Desktop
+* Bitwarden
+* Discord
+* Slack
+* Vivaldi
+* Visual Studio Code
+* Antigravity
+
+Docker groupへの追加は、再ログイン後に反映されます。
+
+### Windows desktop
+
+Windows desktop bootstrapはWindows 11を対象としています。Windows Serverは対象外です。

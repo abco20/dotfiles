@@ -8,14 +8,38 @@ test_home=$(mktemp -d)
 trap 'rm -rf "$test_home"' EXIT
 
 export HOME=$test_home
-export XDG_CONFIG_HOME="$HOME/.config"
+export XDG_CONFIG_HOME="$HOME/xdg-config"
 export XDG_DATA_HOME="$HOME/.local/share"
 export XDG_CACHE_HOME="$HOME/.cache"
-export MISE_SYSTEM_CONFIG_DIR="$XDG_CONFIG_HOME/mise-managed"
+export MISE_SYSTEM_CONFIG_DIR="$HOME/.config/mise-managed"
+export MISE_CONFIG_DIR="$HOME/.config/mise"
 export DOTFILES_PROFILE=${DOTFILES_PROFILE:-container}
 export DOTFILES_DESKTOP=${DOTFILES_DESKTOP:-false}
 export DOTFILES_ROBOTICS=${DOTFILES_ROBOTICS:-false}
 export DOTFILES_ROS_DISTRO=${DOTFILES_ROS_DISTRO:-}
+
+[[ -f $root/packages/ubuntu/desktop.txt ]]
+grep -Fq 'packages/ubuntu/desktop.txt' "$root/scripts/bootstrap-linux.sh"
+grep -Fq 'install_desktop_extras' "$root/scripts/bootstrap-linux.sh"
+grep -Fq 'install_desktop_snaps' "$root/scripts/bootstrap-linux.sh"
+grep -Fq 'install_antigravity' "$root/scripts/bootstrap-linux.sh"
+for desktop_package in bitwarden code discord slack vivaldi antigravity; do
+  grep -Fq "$desktop_package" "$root/scripts/bootstrap-linux.sh"
+done
+grep -Fq 'if [[ $desktop == true ]]; then' "$root/scripts/bootstrap-linux.sh"
+if "$root/scripts/bootstrap-linux.sh" \
+    --profile container --desktop --dry-run >/dev/null 2>&1; then
+  echo 'container + desktop was accepted' >&2
+  exit 1
+fi
+grep -Fq 'export MISE_SYSTEM_CONFIG_DIR="$HOME/.config/mise-managed"' \
+  "$root/scripts/bootstrap-linux.sh"
+grep -Fq 'export MISE_CONFIG_DIR="$HOME/.config/mise"' \
+  "$root/scripts/bootstrap-linux.sh"
+! grep -Fq 'mise install --locked' "$root/scripts/update-mise-lock.sh"
+! grep -R \
+  '\${XDG_CONFIG_HOME:-\$HOME/.config}/mise' \
+  "$root/home" "$root/scripts" "$root/.github" "$root/tests"
 
 test_modifier() {
   local script=$1 work original first second candidate
@@ -182,6 +206,7 @@ git config --global --list >/dev/null
 [[ -e $HOME/.config/mise-managed/mise.lock ]]
 grep -q '^lockfile = true$' "$HOME/.config/mise-managed/conf.d/00-settings.toml"
 grep -q '^export MISE_SYSTEM_CONFIG_DIR=' "$HOME/.config/zsh/main.zsh"
+grep -q '^export MISE_CONFIG_DIR=' "$HOME/.config/zsh/main.zsh"
 ! grep -R -q 'MISE_LOCKFILE=false' \
   "$root/home" "$root/scripts" "$root/.github" "$root/README.md"
 grep -Fq '"aqua:rossmacarthur/sheldon" = {' "$HOME/.config/mise-managed/conf.d/10-common.toml"
@@ -194,7 +219,11 @@ grep -q '^tag = "0.8.0"$' "$HOME/.config/sheldon/plugins.toml"
 [[ ! -e $HOME/.config/mise-managed/conf.d/25-host-ai-cli.toml ]]
 [[ -e $HOME/.config/lazygit/config.yml ]]
 zsh -n "$HOME/.zshrc" "$HOME/.config/zsh/main.zsh" "$HOME/.config/zsh/aliases.zsh"
-PATH=/usr/bin:/bin zsh -dfc 'source "$HOME/.config/zsh/main.zsh"; [[ $MISE_SYSTEM_CONFIG_DIR == "$HOME/.config/mise-managed" ]]'
+PATH=/usr/bin:/bin zsh -dfc '
+  source "$HOME/.config/zsh/main.zsh"
+  [[ $MISE_SYSTEM_CONFIG_DIR == "$HOME/.config/mise-managed" ]]
+  [[ $MISE_CONFIG_DIR == "$HOME/.config/mise" ]]
+'
 
 if [[ $DOTFILES_PROFILE == container ]]; then
   [[ ! -e $HOME/.config/mise-managed/conf.d/30-host-languages.toml ]]

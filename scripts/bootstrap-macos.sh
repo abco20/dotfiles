@@ -16,7 +16,8 @@ done
 [[ $profile == host || $desktop == false ]] || { echo "container profile cannot enable desktop" >&2; exit 2; }
 
 root=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")/.." && pwd)
-export MISE_SYSTEM_CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/mise-managed"
+export MISE_SYSTEM_CONFIG_DIR="$HOME/.config/mise-managed"
+export MISE_CONFIG_DIR="$HOME/.config/mise"
 run() { if $dry_run; then printf '+ %q ' "$@"; printf '\n'; else "$@"; fi; }
 
 command -v brew >/dev/null 2>&1 || { echo "Homebrew must be installed first" >&2; exit 1; }
@@ -25,8 +26,14 @@ run brew bundle --file "$root/packages/macos/Brewfile.common"
 [[ $desktop == true ]] && run brew bundle --file "$root/packages/macos/Brewfile.desktop"
 $dry_run && exit 0
 
-curl https://mise.run | sh
-export PATH="$HOME/.local/bin:$PATH"
+command -v mise >/dev/null 2>&1 || {
+  echo "mise was not installed by Homebrew" >&2
+  exit 1
+}
+case $(command -v mise) in
+  "$(brew --prefix)"/*) ;;
+  *) echo "mise is not installed under the Homebrew prefix" >&2; exit 1 ;;
+esac
 
 export DOTFILES_PROFILE=$profile DOTFILES_DESKTOP=$desktop DOTFILES_ROBOTICS=false DOTFILES_ROS_DISTRO=
 chezmoi_args=(init --apply --force --source "$root")

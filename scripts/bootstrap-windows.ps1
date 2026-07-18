@@ -43,6 +43,8 @@ $env:DOTFILES_ROBOTICS = 'false'
 $env:DOTFILES_ROS_DISTRO = ''
 $env:MISE_SYSTEM_CONFIG_DIR =
     Join-Path $HOME '.config/mise-managed'
+$env:MISE_CONFIG_DIR =
+    Join-Path $HOME '.config/mise'
 
 mise x aqua:twpayne/chezmoi@latest -- chezmoi init --apply --force --source $Root
 if ($LASTEXITCODE -ne 0) {

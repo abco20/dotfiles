@@ -26,11 +26,13 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y mise
           export MISE_SYSTEM_CONFIG_DIR="$HOME/.config/mise-managed"
+          export MISE_CONFIG_DIR="$HOME/.config/mise"
           mise x aqua:twpayne/chezmoi@latest -- \
             chezmoi init --apply --source "$GITHUB_WORKSPACE"
       - name: Refresh lockfile
         run: |
           export MISE_SYSTEM_CONFIG_DIR="$HOME/.config/mise-managed"
+          export MISE_CONFIG_DIR="$HOME/.config/mise"
           local_config="$HOME/.config/mise/config.toml"
           local_lock="$HOME/.config/mise/mise.lock"
           local_config_before=$(sha256sum "$local_config")
@@ -40,7 +42,10 @@ jobs:
             --yes
           cp "$MISE_SYSTEM_CONFIG_DIR/mise.lock" \
             home/private_dot_config/mise-managed/mise.lock
-          mise install --locked
+          lock_after_refresh=$(sha256sum "$MISE_SYSTEM_CONFIG_DIR/mise.lock")
+          mise install
+          test "$lock_after_refresh" = \
+            "$(sha256sum "$MISE_SYSTEM_CONFIG_DIR/mise.lock")"
           test "$local_config_before" = "$(sha256sum "$local_config")"
           test "$local_lock_before" = "$(sha256sum "$local_lock")"
       - name: Open update PR

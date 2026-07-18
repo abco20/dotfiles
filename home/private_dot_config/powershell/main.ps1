@@ -1,5 +1,7 @@
 $env:MISE_SYSTEM_CONFIG_DIR =
     Join-Path $HOME '.config/mise-managed'
+$env:MISE_CONFIG_DIR =
+    Join-Path $HOME '.config/mise'
 
 if (Get-Command mise -ErrorAction SilentlyContinue) {
     (& mise activate pwsh) | Out-String | Invoke-Expression

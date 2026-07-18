@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-config_root=${DOTFILES_MISE_CONFIG_ROOT:-"${XDG_CONFIG_HOME:-$HOME/.config}/mise"}
+config_root=${DOTFILES_MISE_CONFIG_ROOT:-"$HOME/.config/mise"}
 config="$config_root/config.toml"
 lock="$config_root/mise.lock"
 legacy_conf_dir="$config_root/conf.d"

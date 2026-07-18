@@ -33,12 +33,14 @@ jobs:
           DOTFILES_ROBOTICS: "false"
         run: |
           export MISE_SYSTEM_CONFIG_DIR="$HOME/.config/mise-managed"
+          export MISE_CONFIG_DIR="$HOME/.config/mise"
           mise x aqua:twpayne/chezmoi@latest -- \
             chezmoi init --apply --force --source "$GITHUB_WORKSPACE"
 
       - name: Install mise tools
         run: |
           export MISE_SYSTEM_CONFIG_DIR="$HOME/.config/mise-managed"
+          export MISE_CONFIG_DIR="$HOME/.config/mise"
           shared_lock_before=$(sha256sum "$MISE_SYSTEM_CONFIG_DIR/mise.lock")
           mise install
           test "$shared_lock_before" = \
@@ -47,6 +49,7 @@ jobs:
       - name: Verify mise config
         run: |
           export MISE_SYSTEM_CONFIG_DIR="$HOME/.config/mise-managed"
+          export MISE_CONFIG_DIR="$HOME/.config/mise"
           mise --version
           mise config ls > "$RUNNER_TEMP/mise-config.txt"
           cat "$RUNNER_TEMP/mise-config.txt"
@@ -63,12 +66,14 @@ jobs:
           DOTFILES_ROBOTICS: "false"
         run: |
           export MISE_SYSTEM_CONFIG_DIR="$HOME/.config/mise-managed"
+          export MISE_CONFIG_DIR="$HOME/.config/mise"
           mise exec -- "$GITHUB_WORKSPACE/tests/test-posix.sh"
 
       - name: Test system and user lock isolation
         if: matrix.os == 'ubuntu-24.04' && matrix.profile == 'container'
         run: |
           export MISE_SYSTEM_CONFIG_DIR="$HOME/.config/mise-managed"
+          export MISE_CONFIG_DIR="$HOME/.config/mise"
           shared_lock_before=$(sha256sum "$MISE_SYSTEM_CONFIG_DIR/mise.lock")
           mise use -g deno@latest --yes
           empty_system_config=$(mktemp -d)
