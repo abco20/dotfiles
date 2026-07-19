@@ -247,24 +247,51 @@ jobs:
               throw 'Managed mise common config is not loaded.'
           }
 
-          $InstalledTools = mise ls | Out-String
-          if ($LASTEXITCODE -ne 0) {
-              throw "mise ls failed with exit code $LASTEXITCODE."
-          }
-
-          if ($InstalledTools -notmatch 'aqua:twpayne/chezmoi') {
-              throw 'Managed chezmoi installation is missing.'
-          }
-
           mise ls
 
       - name: Check Windows chezmoi
         shell: pwsh
         run: |
           . $PROFILE.CurrentUserAllHosts
-          mise exec 'aqua:twpayne/chezmoi@2.71.0' -- chezmoi --version
+
+          $ChezmoiTool = 'aqua:twpayne/chezmoi@2.71.0'
+
+          $InstallDirectory = (
+              mise where $ChezmoiTool |
+                  Out-String
+          ).Trim()
+
+          if ($LASTEXITCODE -ne 0 -or
+              [string]::IsNullOrWhiteSpace($InstallDirectory)) {
+              throw 'chezmoi is not installed.'
+          }
+
+          Write-Host "chezmoi install directory: $InstallDirectory"
+
+          $Executable = (
+              mise which chezmoi --tool $ChezmoiTool |
+                  Out-String
+          ).Trim()
+
+          if ($LASTEXITCODE -ne 0 -or
+              [string]::IsNullOrWhiteSpace($Executable)) {
+              Write-Host 'Installed directory contents:'
+              Get-ChildItem -Recurse $InstallDirectory |
+                  Select-Object FullName |
+                  Format-Table -AutoSize
+
+              throw 'mise could not resolve chezmoi.exe.'
+          }
+
+          if (-not (Test-Path $Executable)) {
+              throw "Resolved chezmoi executable does not exist: $Executable"
+          }
+
+          Write-Host "chezmoi executable: $Executable"
+
+          & $Executable --version
           if ($LASTEXITCODE -ne 0) {
-              throw "chezmoi execution failed with exit code $LASTEXITCODE."
+              throw "chezmoi failed with exit code $LASTEXITCODE."
           }
 
       - name: Check Windows starship

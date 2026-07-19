@@ -124,12 +124,22 @@ if ($FullBootstrap -match 'bootstrap-windows\.ps1[^\r\n]*-Desktop') {
     throw 'Windows full bootstrap must not enable Desktop.'
 }
 if ($FullBootstrap -notmatch
-    "mise config ls --no-header[\s\S]*Managed mise common config is not loaded" -or
+    'mise config ls --no-header[\s\S]*Managed mise common config is not loaded' -or
     $FullBootstrap -notmatch
-    "mise ls[\s\S]*Managed chezmoi installation is missing" -or
+    'mise where \$ChezmoiTool' -or
     $FullBootstrap -notmatch
-    "mise exec 'aqua:twpayne/chezmoi@2\.71\.0' -- chezmoi --version") {
-    throw 'Windows full bootstrap must separate mise checks from chezmoi execution.'
+    'mise which chezmoi --tool \$ChezmoiTool' -or
+    $FullBootstrap -notmatch
+    '& \$Executable --version') {
+    throw 'Windows full bootstrap must resolve and execute the installed chezmoi binary.'
+}
+if ($WindowsBootstrap -notmatch
+    'mise where \$ChezmoiTool' -or
+    $WindowsBootstrap -notmatch
+    'mise which chezmoi --tool \$ChezmoiTool' -or
+    $WindowsBootstrap -notmatch
+    '& \$ChezmoiExecutable --version') {
+    throw 'Windows bootstrap must verify the installed chezmoi executable.'
 }
 
 if ($PSVersionTable.PSVersion.Major -lt 7) {

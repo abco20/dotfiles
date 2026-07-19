@@ -84,13 +84,42 @@ if ($LoadedConfigs -notmatch $ExpectedCommonConfig) {
     throw 'mise did not load the managed common configuration.'
 }
 
-$InstalledTools = mise ls | Out-String
-if ($LASTEXITCODE -ne 0) {
-    throw "mise ls failed with exit code $LASTEXITCODE."
+$ChezmoiTool = 'aqua:twpayne/chezmoi@2.71.0'
+
+$ChezmoiInstallDirectory = (
+    mise where $ChezmoiTool |
+        Out-String
+).Trim()
+
+if ($LASTEXITCODE -ne 0 -or
+    [string]::IsNullOrWhiteSpace($ChezmoiInstallDirectory)) {
+    throw 'chezmoi was not installed by mise.'
 }
 
-if ($InstalledTools -notmatch 'aqua:twpayne/chezmoi') {
-    throw 'chezmoi was not installed from the managed mise configuration.'
+if (-not (Test-Path $ChezmoiInstallDirectory)) {
+    throw "chezmoi install directory does not exist: $ChezmoiInstallDirectory"
+}
+
+$ChezmoiExecutable = (
+    mise which chezmoi --tool $ChezmoiTool |
+        Out-String
+).Trim()
+
+if ($LASTEXITCODE -ne 0 -or
+    [string]::IsNullOrWhiteSpace($ChezmoiExecutable)) {
+    throw 'mise could not resolve the chezmoi executable.'
+}
+
+if (-not (Test-Path $ChezmoiExecutable)) {
+    throw "chezmoi executable does not exist: $ChezmoiExecutable"
+}
+
+Write-Host "chezmoi install directory: $ChezmoiInstallDirectory"
+Write-Host "chezmoi executable: $ChezmoiExecutable"
+
+& $ChezmoiExecutable --version
+if ($LASTEXITCODE -ne 0) {
+    throw "chezmoi failed with exit code $LASTEXITCODE."
 }
 
 $ProfilePath = $PROFILE.CurrentUserAllHosts
