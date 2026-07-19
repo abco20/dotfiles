@@ -120,14 +120,24 @@ if ($ProfileUpdater -notmatch '\$PROFILE\.CurrentUserAllHosts' -or
 }
 & "$Root/scripts/install-hackgen-font.ps1" -DryRun
 $FullBootstrap = Get-Content "$Root/.github/workflows/full-bootstrap.yml" -Raw
-if ($FullBootstrap -match 'bootstrap-windows\.ps1[^\r\n]*-Desktop') {
+$WindowsJobMatch = [regex]::Match(
+    $FullBootstrap,
+    '(?ms)^  windows:\r?\n(?<Body>.*?)(?=^  [A-Za-z0-9_-]+:\r?\n|\z)'
+)
+
+if (-not $WindowsJobMatch.Success) {
+    throw 'Windows job was not found in full-bootstrap workflow.'
+}
+
+$WindowsJob = $WindowsJobMatch.Groups['Body'].Value
+if ($WindowsJob -match 'bootstrap-windows\.ps1[^\r\n]*-Desktop') {
     throw 'Windows full bootstrap must not enable Desktop.'
 }
-if ($FullBootstrap -notmatch
+if ($WindowsJob -notmatch
     'function Invoke-MiseManagedCommand' -or
-    $FullBootstrap -notmatch
+    $WindowsJob -notmatch
     'mise which \$Name' -or
-    $FullBootstrap -notmatch
+    $WindowsJob -notmatch
     '& \$Executable @Arguments') {
     throw 'Windows full bootstrap must directly execute mise-managed tools.'
 }
@@ -143,7 +153,7 @@ foreach ($CommandName in @(
     $ExpectedDefinition =
         [regex]::Escape("Name = '$CommandName'")
 
-    if ($FullBootstrap -notmatch $ExpectedDefinition) {
+    if ($WindowsJob -notmatch $ExpectedDefinition) {
         throw "Windows full bootstrap does not check $CommandName."
     }
 }
@@ -156,7 +166,7 @@ foreach ($ForbiddenCommand in @(
     'mise exec -- bat',
     'mise exec -- nvim'
 )) {
-    if ($FullBootstrap -match
+    if ($WindowsJob -match
         [regex]::Escape($ForbiddenCommand)) {
         throw "Windows smoke test must not use: $ForbiddenCommand"
     }
