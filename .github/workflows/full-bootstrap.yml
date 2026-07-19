@@ -249,80 +249,80 @@ jobs:
 
           mise ls
 
-      - name: Check Windows chezmoi
+      - name: Check Windows mise-managed tools
         shell: pwsh
         run: |
           . $PROFILE.CurrentUserAllHosts
 
-          $ChezmoiTool = 'aqua:twpayne/chezmoi@2.71.0'
+          function Invoke-MiseManagedCommand {
+              param(
+                  [Parameter(Mandatory)]
+                  [string]$Name,
 
-          $InstallDirectory = (
-              mise where $ChezmoiTool |
-                  Out-String
-          ).Trim()
+                  [Parameter(Mandatory)]
+                  [string[]]$Arguments
+              )
 
-          if ($LASTEXITCODE -ne 0 -or
-              [string]::IsNullOrWhiteSpace($InstallDirectory)) {
-              throw 'chezmoi is not installed.'
+              $WhichOutput = & mise which $Name 2>&1
+              $WhichExitCode = $LASTEXITCODE
+              $Executable = ($WhichOutput | Out-String).Trim()
+
+              if ($WhichExitCode -ne 0 -or
+                  [string]::IsNullOrWhiteSpace($Executable)) {
+                  Write-Host "mise which output for ${Name}:"
+                  Write-Host $WhichOutput
+                  throw "mise could not resolve ${Name}."
+              }
+
+              if (-not (Test-Path -LiteralPath $Executable)) {
+                  throw "Resolved executable does not exist: $Executable"
+              }
+
+              Write-Host "::group::Check $Name"
+              Write-Host "Executable: $Executable"
+
+              & $Executable @Arguments
+              $CommandExitCode = $LASTEXITCODE
+
+              Write-Host '::endgroup::'
+
+              if ($CommandExitCode -ne 0) {
+                  throw "${Name} failed with exit code ${CommandExitCode}."
+              }
           }
 
-          Write-Host "chezmoi install directory: $InstallDirectory"
+          $Checks = @(
+              @{
+                  Name = 'chezmoi'
+                  Arguments = @('--version')
+              },
+              @{
+                  Name = 'starship'
+                  Arguments = @('--version')
+              },
+              @{
+                  Name = 'rg'
+                  Arguments = @('--version')
+              },
+              @{
+                  Name = 'lsd'
+                  Arguments = @('--version')
+              },
+              @{
+                  Name = 'bat'
+                  Arguments = @('--version')
+              },
+              @{
+                  Name = 'nvim'
+                  Arguments = @('--version')
+              }
+          )
 
-          $Executable = (
-              mise which chezmoi --tool $ChezmoiTool |
-                  Out-String
-          ).Trim()
-
-          if ($LASTEXITCODE -ne 0 -or
-              [string]::IsNullOrWhiteSpace($Executable)) {
-              Write-Host 'Installed directory contents:'
-              Get-ChildItem -Recurse $InstallDirectory |
-                  Select-Object FullName |
-                  Format-Table -AutoSize
-
-              throw 'mise could not resolve chezmoi.exe.'
+          foreach ($Check in $Checks) {
+              Invoke-MiseManagedCommand `
+                  -Name $Check.Name `
+                  -Arguments $Check.Arguments
           }
-
-          if (-not (Test-Path $Executable)) {
-              throw "Resolved chezmoi executable does not exist: $Executable"
-          }
-
-          Write-Host "chezmoi executable: $Executable"
-
-          & $Executable --version
-          if ($LASTEXITCODE -ne 0) {
-              throw "chezmoi failed with exit code $LASTEXITCODE."
-          }
-
-      - name: Check Windows starship
-        shell: pwsh
-        run: |
-          . $PROFILE.CurrentUserAllHosts
-          mise exec -- starship --version
-
-      - name: Check Windows ripgrep
-        shell: pwsh
-        run: |
-          . $PROFILE.CurrentUserAllHosts
-          mise exec -- rg --version
-
-      - name: Check Windows lsd
-        shell: pwsh
-        run: |
-          . $PROFILE.CurrentUserAllHosts
-          mise exec -- lsd --version
-
-      - name: Check Windows bat
-        shell: pwsh
-        run: |
-          . $PROFILE.CurrentUserAllHosts
-          mise exec -- bat --version
-
-      - name: Check Windows Neovim
-        shell: pwsh
-        run: |
-          . $PROFILE.CurrentUserAllHosts
-          mise exec -- nvim --version
 
       - name: Check Windows aliases
         shell: pwsh

@@ -124,14 +124,42 @@ if ($FullBootstrap -match 'bootstrap-windows\.ps1[^\r\n]*-Desktop') {
     throw 'Windows full bootstrap must not enable Desktop.'
 }
 if ($FullBootstrap -notmatch
-    'mise config ls --no-header[\s\S]*Managed mise common config is not loaded' -or
+    'function Invoke-MiseManagedCommand' -or
     $FullBootstrap -notmatch
-    'mise where \$ChezmoiTool' -or
+    'mise which \$Name' -or
     $FullBootstrap -notmatch
-    'mise which chezmoi --tool \$ChezmoiTool' -or
-    $FullBootstrap -notmatch
-    '& \$Executable --version') {
-    throw 'Windows full bootstrap must resolve and execute the installed chezmoi binary.'
+    '& \$Executable @Arguments') {
+    throw 'Windows full bootstrap must directly execute mise-managed tools.'
+}
+
+foreach ($CommandName in @(
+    'chezmoi',
+    'starship',
+    'rg',
+    'lsd',
+    'bat',
+    'nvim'
+)) {
+    $ExpectedDefinition =
+        [regex]::Escape("Name = '$CommandName'")
+
+    if ($FullBootstrap -notmatch $ExpectedDefinition) {
+        throw "Windows full bootstrap does not check $CommandName."
+    }
+}
+
+foreach ($ForbiddenCommand in @(
+    'mise exec -- chezmoi',
+    'mise exec -- starship',
+    'mise exec -- rg',
+    'mise exec -- lsd',
+    'mise exec -- bat',
+    'mise exec -- nvim'
+)) {
+    if ($FullBootstrap -match
+        [regex]::Escape($ForbiddenCommand)) {
+        throw "Windows smoke test must not use: $ForbiddenCommand"
+    }
 }
 if ($WindowsBootstrap -notmatch
     'mise where \$ChezmoiTool' -or
