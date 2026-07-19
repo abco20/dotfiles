@@ -108,6 +108,11 @@ if ($WindowsBootstrap -notmatch 'Add-GitInclude' -or
     $WindowsBootstrap -notmatch '-ProfilePath \$ProfilePath') {
     throw 'Windows bootstrap must configure Git includes and pass its profile path.'
 }
+if ($WindowsBootstrap -notmatch 'mise config ls --no-header' -or
+    $WindowsBootstrap -notmatch 'mise did not load the managed common configuration' -or
+    $WindowsBootstrap -notmatch 'aqua:twpayne/chezmoi') {
+    throw 'Windows bootstrap must verify the managed mise configuration and chezmoi installation.'
+}
 $ProfileUpdater = Get-Content "$Root/scripts/update-powershell-profile.ps1" -Raw
 if ($ProfileUpdater -notmatch '\$PROFILE\.CurrentUserAllHosts' -or
     $ProfileUpdater -match "GetFolderPath\('MyDocuments'\)") {
@@ -117,6 +122,14 @@ if ($ProfileUpdater -notmatch '\$PROFILE\.CurrentUserAllHosts' -or
 $FullBootstrap = Get-Content "$Root/.github/workflows/full-bootstrap.yml" -Raw
 if ($FullBootstrap -match 'bootstrap-windows\.ps1[^\r\n]*-Desktop') {
     throw 'Windows full bootstrap must not enable Desktop.'
+}
+if ($FullBootstrap -notmatch
+    "mise config ls --no-header[\s\S]*Managed mise common config is not loaded" -or
+    $FullBootstrap -notmatch
+    "mise ls[\s\S]*Managed chezmoi installation is missing" -or
+    $FullBootstrap -notmatch
+    "mise exec 'aqua:twpayne/chezmoi@2\.71\.0' -- chezmoi --version") {
+    throw 'Windows full bootstrap must separate mise checks from chezmoi execution.'
 }
 
 if ($PSVersionTable.PSVersion.Major -lt 7) {

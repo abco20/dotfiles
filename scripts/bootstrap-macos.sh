@@ -64,24 +64,34 @@ if [[ $personal_apps == true ]]; then
 fi
 $dry_run && exit 0
 
-if ! brew list --formula mise >/dev/null 2>&1; then
-  echo "mise was not installed by Homebrew" >&2
-  exit 1
+mise_version=${MISE_VERSION:-v2026.7.7}
+mise_bin="$HOME/.local/bin/mise"
+
+if [[ ! -x $mise_bin ]] ||
+   [[ $("$mise_bin" --version) != *"${mise_version#v}"* ]]; then
+  echo "Installing mise $mise_version"
+  curl --retry 3 --retry-all-errors -fsSL https://mise.run |
+    MISE_VERSION="$mise_version" \
+    MISE_INSTALL_PATH="$mise_bin" \
+    sh
 fi
 
-export PATH="$(brew --prefix)/bin:$PATH"
+export PATH="$HOME/.local/bin:$PATH"
 hash -r
 
-command -v mise >/dev/null 2>&1 || {
-  echo "mise is not available after Homebrew installation" >&2
-  exit 1
-}
+"$mise_bin" --version
 
 export DOTFILES_PROFILE=$profile DOTFILES_DESKTOP=$desktop DOTFILES_ROBOTICS=false DOTFILES_ROS_DISTRO=
 chezmoi_args=(init --apply --force --source "$root")
 echo "Applying chezmoi configuration"
-mise x aqua:twpayne/chezmoi@latest -- chezmoi "${chezmoi_args[@]}"
+"$mise_bin" x aqua:twpayne/chezmoi@2.71.0 -- \
+  chezmoi "${chezmoi_args[@]}"
+echo "Checking managed mise configuration"
+"$mise_bin" config ls
 echo "Installing mise tools"
-mise install
+"$mise_bin" install --jobs=1
+echo "Checking installed chezmoi"
+"$mise_bin" exec aqua:twpayne/chezmoi@2.71.0 -- \
+  chezmoi --version
 echo "Checking zsh configuration"
 zsh -dfc 'source "$HOME/.zshrc"'

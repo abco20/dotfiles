@@ -157,18 +157,23 @@ jobs:
 
       - name: Smoke test
         run: |
+          export PATH="$HOME/.local/bin:$PATH"
           export MISE_SYSTEM_CONFIG_DIR="$HOME/.config/mise-managed"
           export MISE_CONFIG_DIR="$HOME/.config/mise"
+          test -x "$HOME/.local/bin/mise"
           test -f "$HOME/.config/wezterm/wezterm.lua"
           test -f "$HOME/.config/mpv/mpv.conf"
           test ! -e "$HOME/.config/mpv/mpv.config"
           zsh -dfc 'source "$HOME/.zshrc"'
-          brew list --formula mise
-          command -v mise
           mise --version
-          mise config ls
+          mise config ls --no-header |
+            tee "$RUNNER_TEMP/mise-config.txt"
+          grep -Fq \
+            '.config/mise-managed/conf.d/10-common.toml' \
+            "$RUNNER_TEMP/mise-config.txt"
           mise ls
-          mise exec -- chezmoi --version
+          mise exec aqua:twpayne/chezmoi@2.71.0 -- \
+            chezmoi --version
           mise exec -- starship --version
           mise exec -- rg --version
           mise exec -- fzf --version
@@ -203,7 +208,8 @@ jobs:
         shell: pwsh
         run: |
           if (-not (Test-Path $PROFILE.CurrentUserAllHosts)) {
-              throw "PowerShell profile was not created: $($PROFILE.CurrentUserAllHosts)"
+              $ProfilePath = $PROFILE.CurrentUserAllHosts
+              throw "PowerShell profile was not created: $ProfilePath"
           }
 
           . $PROFILE.CurrentUserAllHosts
@@ -231,14 +237,35 @@ jobs:
           Write-Host "mise executable: $($MiseCommand.Source)"
 
           mise --version
-          mise config ls
+          $LoadedConfigs = mise config ls --no-header | Out-String
+          if ($LASTEXITCODE -ne 0) {
+              throw "mise config ls failed with exit code $LASTEXITCODE."
+          }
+
+          if ($LoadedConfigs -notmatch
+              '\.config[\\/]mise-managed[\\/]conf\.d[\\/]10-common\.toml') {
+              throw 'Managed mise common config is not loaded.'
+          }
+
+          $InstalledTools = mise ls | Out-String
+          if ($LASTEXITCODE -ne 0) {
+              throw "mise ls failed with exit code $LASTEXITCODE."
+          }
+
+          if ($InstalledTools -notmatch 'aqua:twpayne/chezmoi') {
+              throw 'Managed chezmoi installation is missing.'
+          }
+
           mise ls
 
       - name: Check Windows chezmoi
         shell: pwsh
         run: |
           . $PROFILE.CurrentUserAllHosts
-          mise exec -- chezmoi --version
+          mise exec 'aqua:twpayne/chezmoi@2.71.0' -- chezmoi --version
+          if ($LASTEXITCODE -ne 0) {
+              throw "chezmoi execution failed with exit code $LASTEXITCODE."
+          }
 
       - name: Check Windows starship
         shell: pwsh

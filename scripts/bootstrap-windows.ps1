@@ -70,6 +70,29 @@ if ($LASTEXITCODE -ne 0) {
     throw "mise install failed with exit code $LASTEXITCODE."
 }
 
+$LoadedConfigs = mise config ls --no-header | Out-String
+if ($LASTEXITCODE -ne 0) {
+    throw "mise config ls failed with exit code $LASTEXITCODE."
+}
+
+$ExpectedCommonConfig =
+    [regex]::Escape(
+        (Join-Path $env:MISE_SYSTEM_CONFIG_DIR 'conf.d/10-common.toml')
+    )
+
+if ($LoadedConfigs -notmatch $ExpectedCommonConfig) {
+    throw 'mise did not load the managed common configuration.'
+}
+
+$InstalledTools = mise ls | Out-String
+if ($LASTEXITCODE -ne 0) {
+    throw "mise ls failed with exit code $LASTEXITCODE."
+}
+
+if ($InstalledTools -notmatch 'aqua:twpayne/chezmoi') {
+    throw 'chezmoi was not installed from the managed mise configuration.'
+}
+
 $ProfilePath = $PROFILE.CurrentUserAllHosts
 if ([string]::IsNullOrWhiteSpace($ProfilePath)) {
     throw 'CurrentUserAllHosts profile path is unavailable.'

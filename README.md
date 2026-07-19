@@ -15,7 +15,7 @@
 # Ubuntu + desktop + personal apps
 ./scripts/bootstrap-linux.sh --profile host --desktop --personal-apps
 
-# macOS（Homebrewが必要）
+# macOS（Homebrewが必要。miseはstandalone版を導入）
 ./scripts/bootstrap-macos.sh --profile host --desktop
 
 # macOS + personal apps
@@ -68,6 +68,7 @@ personal appsはPR必須のfull bootstrapでは実インストールせず、man
 macOSでも`--personal-apps`を指定すると同じpersonal appsを追加できます。
 macOSの通常のdesktop bootstrapでは、`Brewfile.desktop-manual`から
 Docker DesktopとHackGen Nerd Fontも導入します。
+miseはHomebrewではなく、bootstrapがstandalone版のv2026.7.7を導入します。
 
 GitHub-hosted CIでは`--skip-manual-desktop`を指定し、
 これらの実機向けパッケージを除外します。

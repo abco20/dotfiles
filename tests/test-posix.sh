@@ -180,6 +180,16 @@ test_source_file_update
 
 grep -Fxq 'cask "docker-desktop"' \
   "$root/packages/macos/Brewfile.desktop-manual"
+! grep -Fxq 'brew "mise"' "$root/packages/macos/Brewfile.common"
+grep -Fq 'mise_version=${MISE_VERSION:-v2026.7.7}' \
+  "$root/scripts/bootstrap-macos.sh"
+grep -Fq 'mise_bin="$HOME/.local/bin/mise"' \
+  "$root/scripts/bootstrap-macos.sh"
+grep -Fq 'MISE_INSTALL_PATH="$mise_bin"' \
+  "$root/scripts/bootstrap-macos.sh"
+grep -Fq 'aqua:twpayne/chezmoi@2.71.0' \
+  "$root/scripts/bootstrap-macos.sh"
+grep -Fq 'install --jobs=1' "$root/scripts/bootstrap-macos.sh"
 for cask in visual-studio-code wezterm; do
   grep -Fxq "cask \"$cask\"" "$root/packages/macos/Brewfile.desktop"
   ! grep -Fxq "cask \"$cask\"" "$root/packages/macos/Brewfile.personal"
