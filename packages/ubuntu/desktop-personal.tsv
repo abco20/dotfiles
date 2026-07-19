@@ -1,0 +1,7 @@
+# provider       package
+snap              bitwarden
+snap              discord
+snap              slack
+snap              vivaldi
+repository-apt    nextcloud
+repository-apt    antigravity

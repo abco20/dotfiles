@@ -1,0 +1,9 @@
+[tools]
+"aqua:twpayne/chezmoi" = "latest"
+"aqua:starship/starship" = "latest"
+"aqua:rossmacarthur/sheldon" = {
+  version = "latest",
+  os = ["linux", "macos"],
+}
+"aqua:BurntSushi/ripgrep" = "latest"
+"aqua:junegunn/fzf" = "latest"

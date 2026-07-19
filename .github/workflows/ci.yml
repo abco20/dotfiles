@@ -1,0 +1,105 @@
+name: ci
+
+on:
+  pull_request:
+  push:
+
+env:
+  GITHUB_TOKEN: ${{ github.token }}
+
+jobs:
+  ubuntu:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-22.04, ubuntu-24.04]
+        profile: [container, host]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install mise and zsh
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y extrepo zsh
+          sudo extrepo enable mise
+          sudo apt-get update
+          sudo apt-get install -y mise
+
+      - name: Apply chezmoi
+        env:
+          DOTFILES_PROFILE: ${{ matrix.profile }}
+          DOTFILES_DESKTOP: "false"
+          DOTFILES_ROBOTICS: "false"
+        run: |
+          export MISE_SYSTEM_CONFIG_DIR="$HOME/.config/mise-managed"
+          export MISE_CONFIG_DIR="$HOME/.config/mise"
+          mise x aqua:twpayne/chezmoi@latest -- \
+            chezmoi init --apply --force --source "$GITHUB_WORKSPACE"
+
+      - name: Install mise tools
+        run: |
+          export MISE_SYSTEM_CONFIG_DIR="$HOME/.config/mise-managed"
+          export MISE_CONFIG_DIR="$HOME/.config/mise"
+          shared_lock_before=$(sha256sum "$MISE_SYSTEM_CONFIG_DIR/mise.lock")
+          mise install
+          test "$shared_lock_before" = \
+            "$(sha256sum "$MISE_SYSTEM_CONFIG_DIR/mise.lock")"
+
+      - name: Verify mise config
+        run: |
+          export MISE_SYSTEM_CONFIG_DIR="$HOME/.config/mise-managed"
+          export MISE_CONFIG_DIR="$HOME/.config/mise"
+          mise --version
+          mise config ls > "$RUNNER_TEMP/mise-config.txt"
+          cat "$RUNNER_TEMP/mise-config.txt"
+          grep -Fq '.config/mise-managed/conf.d/10-common.toml' \
+            "$RUNNER_TEMP/mise-config.txt"
+          mise ls
+          find "$MISE_SYSTEM_CONFIG_DIR" -maxdepth 3 -type f -print
+          find "$HOME/.config/mise" -maxdepth 2 -type f -print
+
+      - name: Run POSIX tests
+        env:
+          DOTFILES_PROFILE: ${{ matrix.profile }}
+          DOTFILES_DESKTOP: "false"
+          DOTFILES_ROBOTICS: "false"
+        run: |
+          export MISE_SYSTEM_CONFIG_DIR="$HOME/.config/mise-managed"
+          export MISE_CONFIG_DIR="$HOME/.config/mise"
+          mise exec -- "$GITHUB_WORKSPACE/tests/test-posix.sh"
+
+      - name: Test system and user lock isolation
+        if: matrix.os == 'ubuntu-24.04' && matrix.profile == 'container'
+        run: |
+          export MISE_SYSTEM_CONFIG_DIR="$HOME/.config/mise-managed"
+          export MISE_CONFIG_DIR="$HOME/.config/mise"
+          shared_lock_before=$(sha256sum "$MISE_SYSTEM_CONFIG_DIR/mise.lock")
+          mise use -g deno@latest --yes
+          empty_system_config=$(mktemp -d)
+          trap 'rm -rf "$empty_system_config"' EXIT
+          MISE_SYSTEM_CONFIG_DIR="$empty_system_config" \
+            mise lock --global --platform linux-x64 --yes
+          test "$shared_lock_before" = \
+            "$(sha256sum "$MISE_SYSTEM_CONFIG_DIR/mise.lock")"
+          grep -Fq 'aqua:starship/starship' \
+            "$MISE_SYSTEM_CONFIG_DIR/mise.lock"
+          ! grep -Fq '[[tools.deno]]' \
+            "$MISE_SYSTEM_CONFIG_DIR/mise.lock"
+          grep -Fq '[[tools.deno]]' "$HOME/.config/mise/mise.lock"
+          ! grep -Fq 'aqua:starship/starship' \
+            "$HOME/.config/mise/mise.lock"
+          local_config_before=$(sha256sum "$HOME/.config/mise/config.toml")
+          local_lock_before=$(sha256sum "$HOME/.config/mise/mise.lock")
+          mise exec -- chezmoi apply --force
+          test "$local_config_before" = \
+            "$(sha256sum "$HOME/.config/mise/config.toml")"
+          test "$local_lock_before" = \
+            "$(sha256sum "$HOME/.config/mise/mise.lock")"
+
+  windows:
+    runs-on: windows-2025
+    steps:
+      - uses: actions/checkout@v4
+      - shell: pwsh
+        run: ./tests/test-windows.ps1

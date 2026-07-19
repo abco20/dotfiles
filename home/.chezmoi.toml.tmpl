@@ -1,0 +1,7 @@
+sourceDir = {{ .chezmoi.sourceDir | quote }}
+
+[data]
+profile = {{ default "host" (env "DOTFILES_PROFILE") | quote }}
+desktop = {{ eq (env "DOTFILES_DESKTOP") "true" }}
+robotics = {{ eq (env "DOTFILES_ROBOTICS") "true" }}
+rosDistro = {{ env "DOTFILES_ROS_DISTRO" | quote }}

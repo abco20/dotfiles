@@ -1,0 +1,19 @@
+# Node
+npm-debug.log
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
+
+# Editors
+.idea/
+.vscode/
+*~
+
+# General
+log/
+*.log
+.cache/
+.Trash-1000

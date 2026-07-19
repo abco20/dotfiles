@@ -1,0 +1,8 @@
+build-essential
+clang
+cmake
+gdb
+lldb
+ninja-build
+pkg-config
+trash-cli
