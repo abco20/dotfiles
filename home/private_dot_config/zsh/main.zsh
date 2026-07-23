@@ -30,11 +30,15 @@ elif [[ -x "$HOME/.local/bin/mise" ]]; then
 fi
 if [[ -n ${_abco20_mise:-} ]]; then
   eval "$("$_abco20_mise" activate zsh)"
-  unset _abco20_mise
 fi
 
 [[ -r "$HOME/.config/zsh/aliases.zsh" ]] && source "$HOME/.config/zsh/aliases.zsh"
 [[ -r "$HOME/.config/zsh/ros.zsh" ]] && source "$HOME/.config/zsh/ros.zsh"
+
+if [[ -n ${_abco20_mise:-} ]]; then
+  eval "$("$_abco20_mise" completion zsh)"
+  unset _abco20_mise
+fi
 
 if command -v starship >/dev/null 2>&1; then
   eval "$(starship init zsh)"
