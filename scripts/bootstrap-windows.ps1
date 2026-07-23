@@ -14,7 +14,13 @@ if ($PSVersionTable.PSVersion.Major -lt 7) {
 }
 
 $Root = Split-Path -Parent $PSScriptRoot
-$WingetArgs = @('import', '--accept-package-agreements', '--accept-source-agreements', '--disable-interactivity')
+$WingetArgs = @(
+    'import',
+    '--accept-package-agreements',
+    '--accept-source-agreements',
+    '--disable-interactivity',
+    '--no-upgrade'
+)
 
 function Install-WingetFile([string]$Path) {
     if ($DryRun) { Write-Host "+ winget import $Path"; return }

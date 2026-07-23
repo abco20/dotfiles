@@ -101,6 +101,10 @@ if ($WindowsBootstrap -notmatch '\[string\]\$DotfilesProfile\b') {
     throw 'Windows bootstrap must use DotfilesProfile as its parameter name.'
 }
 
+if ($WindowsBootstrap -notmatch "'--no-upgrade'") {
+    throw 'Windows bootstrap must not upgrade packages during winget import.'
+}
+
 if ($WindowsBootstrap -notmatch 'Add-GitInclude' -or
     $WindowsBootstrap -notmatch '\$PROFILE\.CurrentUserAllHosts' -or
     $WindowsBootstrap -notmatch 'install-hackgen-font\.ps1' -or
