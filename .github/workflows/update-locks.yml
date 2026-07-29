@@ -43,7 +43,9 @@ jobs:
           cp "$MISE_SYSTEM_CONFIG_DIR/mise.lock" \
             home/private_dot_config/mise-managed/mise.lock
           lock_after_refresh=$(sha256sum "$MISE_SYSTEM_CONFIG_DIR/mise.lock")
-          mise install
+          empty_user_config=$(mktemp -d)
+          trap 'rm -rf "$empty_user_config"' EXIT
+          MISE_CONFIG_DIR="$empty_user_config" mise install
           test "$lock_after_refresh" = \
             "$(sha256sum "$MISE_SYSTEM_CONFIG_DIR/mise.lock")"
           test "$local_config_before" = "$(sha256sum "$local_config")"
